@@ -26,7 +26,8 @@ class Controller:
         self.dead_zone = dead_zone
 
         self._steer_idx     = 0
-        self._throttle_brake_idx = 1
+        self._throttle_idx = 1
+        self._brake_idx = 2
         self._reverse_idx   = 5
 
 
@@ -76,9 +77,7 @@ class Controller:
         Gets the state of the steering wheel.
 
         Returns:
-            A value x such that
-
-            -1 <= x <= 1 && -1 <= y <= 1
+            A value x from 0-1
 
             Negative values are left.
             Positive values are right.
@@ -92,21 +91,15 @@ class Controller:
 
     def get_brake(self):
         """
-        Gets the state of the break pedal.
+        Gets the state of the brake pedal.
 
         Returns:
-            A value x such that
-
-            -1 <= x <= 1
+            A value x  0-1 0 not pressed, 1 fully pressed
 
         """
 
-        v=(self.get_axis()[self._throttle_brake_idx])
-        if v>0:
-            return v
-        else:
-            return 0
-
+        v=(self.get_axis()[self._brake_idx]) # returns 1 in idle, going to -1 fully pressed
+        return  (1-v)/2 # when idle 1-1/2=0, when pressed (1--1)/2=1
 
 
     def get_throttle(self):
@@ -114,18 +107,12 @@ class Controller:
         Gets the state of the throttle pedal.
 
         Returns:
-            A value x such that
-
-            -1 <= x <= 1
+            A value x such from 0 to 1, 0 not pressed
 
         """
 
-        v = (self.get_axis()[self._throttle_brake_idx])
-        if v < 0:
-            return -v
-        else:
-            return 0
-
+        v = (self.get_axis()[self._throttle_idx]) # returns 1 in idle, going to -1 fully pressed
+        return (1-v)/2
 
     def get_reverse(self):
         """
