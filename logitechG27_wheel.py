@@ -9,14 +9,6 @@
 import pygame
 import sys
 
-if sys.version_info >= (3, 0):
-
-    from configparser import ConfigParser
-
-else:
-
-    import ConfigParser.RawConfigParser as ConfigParser
-
 class Controller:
 
     def __init__(self, id, dead_zone = 0.15):
@@ -33,14 +25,9 @@ class Controller:
         self._joystick.init()
         self.dead_zone = dead_zone
 
-        self._parser = ConfigParser()
-        self._parser.read('wheel_config.ini')
-        self._steer_idx     = int(self._parser.get('G29 Racing Wheel', 'steering_wheel'))
-        self._clutch_idx  = int(self._parser.get('G29 Racing Wheel', 'gear'))
-        self._throttle_idx = int(self._parser.get('G29 Racing Wheel', 'throttle'))
-        self._brake_idx     = int(self._parser.get('G29 Racing Wheel', 'brake'))
-        self._reverse_idx   = int(self._parser.get('G29 Racing Wheel', 'reverse'))
-        self._handbrake_idx = int(self._parser.get('G29 Racing Wheel', 'handbrake'))
+        self._steer_idx     = 0
+        self._throttle_brake_idx = 1
+        self._reverse_idx   = 5
 
 
     def get_id(self):
@@ -101,19 +88,6 @@ class Controller:
         return (self.get_axis()[self._steer_idx])
 
 
-    def get_clutch(self):
-        """
-        Gets the state of the gear pedal.
-
-        Returns:
-            A value x such that
-
-            -1 <= x <= 1
-
-        """
-
-
-        return (self.get_axis()[self._clutch_idx])
 
 
     def get_brake(self):
@@ -127,8 +101,11 @@ class Controller:
 
         """
 
-
-        return (self.get_axis()[self._brake_idx])
+        v=(self.get_axis()[self._throttle_brake_idx])
+        if v>0:
+            return v
+        else:
+            return 0
 
 
 
@@ -143,8 +120,11 @@ class Controller:
 
         """
 
-
-        return (self.get_axis()[self._throttle_idx])
+        v = (self.get_axis()[self._throttle_brake_idx])
+        if v < 0:
+            return -v
+        else:
+            return 0
 
 
     def get_reverse(self):
@@ -157,7 +137,7 @@ class Controller:
         """
 
 
-        return (self.get_buttons()[self._reverse_idx])
+        return self.get_buttons()[self._reverse_idx]
 
 
     def get_handbrake(self):
