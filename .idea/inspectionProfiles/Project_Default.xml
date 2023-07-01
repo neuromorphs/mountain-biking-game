@@ -16,7 +16,7 @@
     <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredPackages">
         <value>
-          <list size="58">
+          <list size="59">
             <item index="0" class="java.lang.String" itemvalue="opencv-python" />
             <item index="1" class="java.lang.String" itemvalue="engineeringformat" />
             <item index="2" class="java.lang.String" itemvalue="tensorflow-model-optimization" />
@@ -75,6 +75,7 @@
             <item index="55" class="java.lang.String" itemvalue="pytz" />
             <item index="56" class="java.lang.String" itemvalue="webencodings" />
             <item index="57" class="java.lang.String" itemvalue="pyxid2" />
+            <item index="58" class="java.lang.String" itemvalue="pyserial" />
           </list>
         </value>
       </option>
