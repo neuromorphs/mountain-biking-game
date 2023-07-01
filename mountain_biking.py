@@ -9,6 +9,16 @@ import logitechG27_wheel
 import socket
 import numpy as np
 import csv
+from playsound import playsound
+from datetime import datetime
+from time import time
+
+# sound that is played at start
+# TRIGGER_SOUND_FILE='cowbell3.wav'
+TRIGGER_SOUND_FILE=None # don't play sound
+
+# data file has this header
+SUBJECT='karan'
 
 # COM port for CGX dry electrode
 USE_CGX = True
@@ -96,7 +106,7 @@ cgx_serial = None
 if USE_CGX:
     log.info(f'using CGX dry electrode USB serial port on CGX_COM_PORT {CGX_COM_PORT}')
     try:
-        cgx_serial = serial.Serial(CGX_COM_PORT, 57600, timeout=5)
+        cgx_serial = serial.Serial(CGX_COM_PORT, 1152003, timeout=5)
     except serial.serialutil.SerialException as e:
         log.error(f'will not be able to send steering errors on COM port: {e}')
 
@@ -108,6 +118,13 @@ reader = csv.DictReader(filter(lambda row: row[0] != '#', csvfile),
                         dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
 # row_iterator = reader.__iter__()
 
+# data file
+data_file_name=SUBJECT+' '+datetime.now().strftime('%Y-%m %d-%H-%M')+'.csv'
+data_file=open(data_file_name,'w')
+data_file.write('# Mountain biking error Telluride 2023\n')
+data_file.write('time(s),error,trail_pos\n')
+log.info(f'opened {data_file_name} for data')
+
 # game loop
 done = False
 throttle01 = 0  # throttle 0-1 range
@@ -115,6 +132,7 @@ brake01 = 0  # brake 0-1 range
 steering11 = 0  # steering angle -1 to 1
 reversed = 0
 jsInputs = None
+start_time=None
 
 # todo add sync rect to trigger trigger box with photodiode
 
@@ -123,6 +141,7 @@ frame_counter = 0
 showed_trigger_flash = False
 while not done:
     frame_counter += 1
+    time_now=()
 
     # event handling
     for event in pygame.event.get():
@@ -153,15 +172,20 @@ while not done:
     # sock.sendto(msgX + msgY + msgZ,("127.0.0.1", 5005))
 
     # read trail info
-    current_row = next(reader)
-    if current_row is None:
+    try:
+        current_row = next(reader)
+        # if float(current_row['time'])>10: # debug rewind
+        #     raise StopIteration()
+    except StopIteration:
         log.info(f'reached end of trail after {frame_counter} frames, rewinding')
         showed_trigger_flash = False
         trail[:] = np.nan
+        csvfile.close()
+        csvfile = open(csv_file_name, 'r')
         reader = csv.DictReader(filter(lambda row: row[0] != '#', csvfile),
                                 dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
         current_row = next(reader)
-    time = float(current_row['time'])
+    trail_time = float(current_row['time'])
     newest_trail_pos = float(current_row['trail_pos']) / 10  # range in file is -10 to +10, map to -1 to +1
 
     # update background stars
@@ -216,9 +240,19 @@ while not done:
     err = (current_trail_pos - steering11) / 2  # steering error, range -1 to 1, ideally zero
     # print(f'error={err:.3f}')
     if not np.isnan(err):
-        if not showed_trigger_flash:
-            pygame.draw.rect(screen, WHITE, (SX - 100, 0, 100, 100))  # rect is left top width height
+        # error measurements start here
+        SYNC_BOX_SIZE=50
+        if not showed_trigger_flash:  # detect first time that trail crosses current time line
             showed_trigger_flash = True
+            start_time=time()
+            pygame.draw.rect(screen, WHITE, (SX - SYNC_BOX_SIZE, 0, SYNC_BOX_SIZE, SYNC_BOX_SIZE))  # rect is left top width height
+            if not TRIGGER_SOUND_FILE is None:
+                playsound(TRIGGER_SOUND_FILE)
+        else:
+            pygame.draw.rect(screen, BLACK, (SX - SYNC_BOX_SIZE, 0, SYNC_BOX_SIZE, SYNC_BOX_SIZE))  # rect is left top width height
+
+        elapsed_time= time() - start_time
+        data_file.write(f'{elapsed_time:.6f},{err:.4f},{current_trail_pos:.4f}\n')
         pygame.draw.line(screen, RED, [sx2 + current_trail_pos * sx2, st_y], [sx2 + steering11 * sx2, st_y],
                          width=st_line_width)
         if USE_XID and trigger_device is not None:
@@ -241,7 +275,7 @@ while not done:
     pygame.draw.circle(screen, color, throttle_pos, throttle_ball_rad)
 
     # draw text
-    img = font.render(f't={time:.1f}s fr={frame_counter:,}', True, WHITE)
+    img = font.render(f't={trail_time:.1f}s fr={frame_counter:,}', True, WHITE)
     screen.blit(img, (20, 20))
 
     # print(f'axes: {np.array2string(np.array(jsInputs),precision=2)} '
