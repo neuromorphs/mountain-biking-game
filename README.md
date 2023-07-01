@@ -1,5 +1,5 @@
 # EEG recording during mountaing biking game
-
+![screen_shot.png](screen_shot.png)
 ## installation
 Needs windows OS.
 

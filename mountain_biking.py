@@ -59,7 +59,7 @@ br_th_x = int(SX * .2)
 brake_pos = [br_th_x, br_th_y]
 throttle_pos = [SX - br_th_x, br_th_y]
 
-SPEED = 4  # how many rows to shift image per pygame tick
+SPEED = 2  # how many rows to shift image per pygame tick
 STEERING_RATE = .002 # keyboard steering rate
 
 pygame.init()
@@ -180,6 +180,7 @@ while not done:
         log.info(f'reached end of trail after {frame_counter} frames, rewinding')
         showed_trigger_flash = False
         trail[:] = np.nan
+        frame_counter=0
         csvfile.close()
         csvfile = open(csv_file_name, 'r')
         reader = csv.DictReader(filter(lambda row: row[0] != '#', csvfile),
