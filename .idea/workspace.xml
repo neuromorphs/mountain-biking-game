@@ -5,7 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ee96549-2c32-4e4d-ab00-9fc0809c9810" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/analyze_results.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/prefs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/pygame-logitechG29_wheel.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/pygame-logitechG29_wheel.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mountain_biking.py" beforeDir="false" afterPath="$PROJECT_DIR$/mountain_biking.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,6 +49,33 @@
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\tobid\Dropbox\GitHub\neuromorphs\pygame-logitechG29_wheel.git" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\tobid\Dropbox\GitHub\neuromorphs\pygame-logitechG29_wheel.git\results" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="pygame-logitechG29_wheel" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -53,7 +86,7 @@
       <option name="presentableId" value="Default" />
       <updated>1688056197439</updated>
       <workItem from="1688056198664" duration="8245000" />
-      <workItem from="1688148218062" duration="25632000" />
+      <workItem from="1688148218062" duration="28514000" />
     </task>
     <task id="LOCAL-00001" summary="steering.py shows wheel position and throttle brake for G27 logitech wheel now.  Basis for mountain biking game with pygame">
       <created>1688129148472</created>
@@ -90,7 +123,14 @@
       <option name="project" value="LOCAL" />
       <updated>1688245696399</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="added screen_shot.png">
+      <created>1688251993803</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1688251993803</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -102,10 +142,12 @@
     <MESSAGE value="added logging, added pyxid2 lib, fixed colors, added error bar" />
     <MESSAGE value="added frame sync, keyboard control" />
     <MESSAGE value="used for first EEG recording" />
-    <option name="LAST_COMMIT_MESSAGE" value="used for first EEG recording" />
+    <MESSAGE value="reduced speed, fixed CSV output to include trail .&#10;added pycharm project file" />
+    <MESSAGE value="added screen_shot.png" />
+    <option name="LAST_COMMIT_MESSAGE" value="added screen_shot.png" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/pygame_logitechG29_wheel_git$mountain_biking.coverage" NAME="mountain_biking Coverage Results" MODIFIED="1688245779494" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/pygame_logitechG29_wheel_git$mountain_biking.coverage" NAME="mountain_biking Coverage Results" MODIFIED="1688251843141" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/pygame_logitechG29_wheel_git$steering.coverage" NAME="steering Coverage Results" MODIFIED="1688148229428" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/pygame_logitechG29_wheel_git$logitechG29_wheel.coverage" NAME="logitechG29_wheel Coverage Results" MODIFIED="1688057122312" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>

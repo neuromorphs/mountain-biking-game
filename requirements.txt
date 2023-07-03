@@ -4,3 +4,7 @@ pyxid2
 ftd2xx # needs also hardware FTDI chip drivers https://ftdichip.com/drivers/d2xx-drivers/
 pyserial
 playsound
+matplotlib
+easygui
+pypref
+pandas

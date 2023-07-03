@@ -1,5 +1,7 @@
 # mountain biking game simplified and written in pure python for Telluride 2023
 # Tobi Delbruck
+import os.path
+
 from get_logger import get_logger
 
 log = get_logger()
@@ -12,6 +14,8 @@ import csv
 from playsound import playsound
 from datetime import datetime
 from time import time
+from prefs import prefs
+my_prefs=prefs()
 
 # sound that is played at start
 # TRIGGER_SOUND_FILE='cowbell3.wav'
@@ -112,14 +116,14 @@ if USE_CGX:
 
 # trail CSV file
 csv.register_dialect('skip-comments', skipinitialspace=True)
-csv_file_name = 'trail.csv'
-csvfile = open(csv_file_name, 'r')
-reader = csv.DictReader(filter(lambda row: row[0] != '#', csvfile),
-                        dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
+trail_csv_file_name = 'trail.csv'
+trail_csvfile = open(trail_csv_file_name, 'r')
+trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
+                              dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
 # row_iterator = reader.__iter__()
 
 # data file
-data_file_name=SUBJECT+' '+datetime.now().strftime('%Y-%m %d-%H-%M')+'.csv'
+data_file_name=os.path.join('results',SUBJECT+' '+datetime.now().strftime('%Y-%m %d-%H-%M')+'.csv')
 data_file=open(data_file_name,'w')
 data_file.write('# Mountain biking error Telluride 2023\n')
 data_file.write('time(s),error,trail_pos\n')
@@ -173,7 +177,7 @@ while not done:
 
     # read trail info
     try:
-        current_row = next(reader)
+        current_row = next(trail_reader)
         # if float(current_row['time'])>10: # debug rewind
         #     raise StopIteration()
     except StopIteration:
@@ -181,11 +185,11 @@ while not done:
         showed_trigger_flash = False
         trail[:] = np.nan
         frame_counter=0
-        csvfile.close()
-        csvfile = open(csv_file_name, 'r')
-        reader = csv.DictReader(filter(lambda row: row[0] != '#', csvfile),
-                                dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
-        current_row = next(reader)
+        trail_csvfile.close()
+        trail_csvfile = open(trail_csv_file_name, 'r')
+        trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
+                                      dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
+        current_row = next(trail_reader)
     trail_time = float(current_row['time'])
     newest_trail_pos = float(current_row['trail_pos']) / 10  # range in file is -10 to +10, map to -1 to +1
 
