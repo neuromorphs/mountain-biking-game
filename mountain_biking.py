@@ -3,8 +3,9 @@
 import os.path
 
 from get_logger import get_logger
-
 log = get_logger()
+from prefs import prefs
+prefs=prefs()
 
 import pygame
 import logitechG27_wheel
@@ -14,15 +15,23 @@ import csv
 from playsound import playsound
 from datetime import datetime
 from time import time
-from prefs import prefs
-my_prefs=prefs()
+from easygui import  enterbox
+import pandas as pd
+import matplotlib as plt
+
 
 # sound that is played at start
 # TRIGGER_SOUND_FILE='cowbell3.wav'
 TRIGGER_SOUND_FILE=None # don't play sound
 
 # data file has this header
-SUBJECT='karan'
+driver_name=prefs.get('last_driver', '')
+driver_name=enterbox(msg='Enter driver name', title='Driver?', default=driver_name, strip=True)
+prefs.put('last_driver', driver_name)
+
+ACCUMLATED_RESULTS_FILENAME='accumulated_results.csv'
+
+DRIVE_TIME_LIMIT_S=90 # experiment terminates after this time in seconds
 
 # COM port for CGX dry electrode
 USE_CGX = True
@@ -123,7 +132,7 @@ trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
 # row_iterator = reader.__iter__()
 
 # data file
-data_file_name=os.path.join('results',SUBJECT+' '+datetime.now().strftime('%Y-%m %d-%H-%M')+'.csv')
+data_file_name=os.path.join('results', driver_name + ' ' + datetime.now().strftime('%Y-%m %d-%H-%M') + '.csv')
 data_file=open(data_file_name,'w')
 data_file.write('# Mountain biking error Telluride 2023\n')
 data_file.write('time(s),error,trail_pos\n')
@@ -142,7 +151,9 @@ start_time=None
 
 # sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 frame_counter = 0
+accumulated_err=0
 showed_trigger_flash = False
+elapsed_time=0
 while not done:
     frame_counter += 1
     time_now=()
@@ -162,13 +173,12 @@ while not done:
         # print(f'reversed={reversed}')
         throttle01 = controller.get_throttle()
         brake01 = controller.get_brake()
-    else:  # no steering wheel or joystick controller, use steering rate control by arrow keys
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
-            steering11 -= STEERING_RATE
-        elif keys[pygame.K_RIGHT]:
-            steering11 += STEERING_RATE
-        steering11=np.clip(steering11,a_min=-1,a_max=1)
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        steering11 -= STEERING_RATE
+    elif keys[pygame.K_RIGHT]:
+        steering11 += STEERING_RATE
+    steering11=np.clip(steering11,a_min=-1,a_max=1)
 
     # msgX = bytes([126 + int(steerPos* 126)])
     # msgY = bytes([126 + int(throtPos* 126)])
@@ -269,6 +279,43 @@ while not done:
             # byte_err=np.int8(frame_counter)
             cgx_serial.write(byte_err)
 
+        # accumulate total error
+        accumulated_err+=np.abs(err)
+
+        # maybe terminate
+        if elapsed_time>DRIVE_TIME_LIMIT_S or keys[pygame.K_ESCAPE] or keys[pygame.K_x]:
+            avg_err=accumulated_err/frame_counter
+            log.info(f'Drive is done after {elapsed_time:.1f}s: Average absolute error: {avg_err:.2f}')
+            with open(ACCUMLATED_RESULTS_FILENAME,'a') as results_file:
+                epoch_time=int(time())
+                results_file.write(f'{driver_name},{avg_err},{epoch_time}\n')
+            d = pd.read_csv(ACCUMLATED_RESULTS_FILENAME, comment='#')
+            drivers = d['driver']
+            errors = d['error']
+            epoch_times=d['epoch_time']
+            i= np.argsort(errors)
+            sorted_errors=errors[i]
+            sorted_drivers=drivers[i]
+            sorted_epoch_times=epoch_times[i]
+            rank=np.searchsorted(sorted_errors.to_numpy(),avg_err)
+            from easygui import textbox
+            print('************************** Leaderboard *************************\nDriver\t\tAverage Error\t\t\tWhen')
+            top10_counter=0
+            for d,e,t in zip(sorted_drivers,sorted_errors,sorted_epoch_times):
+                datetime_obj = datetime.utcfromtimestamp(t)
+                when=datetime_obj.strftime('%Y-%m-%d %H:%M')
+                print(f'{d}\t\t{e:.3f}\t\t\t{when}')
+                top10_counter+=1
+                if top10_counter>10:
+                    break
+            print('***************************************************************')
+            print(f'Your error of {avg_err:.3f} ranks you #{rank} of {len(sorted_errors)}')
+            print('***************************************************************')
+            pygame.quit()
+            quit(0)
+
+
+
     # draw brake and throttle discs
     if reversed:
         color = RED
@@ -280,7 +327,7 @@ while not done:
     pygame.draw.circle(screen, color, throttle_pos, throttle_ball_rad)
 
     # draw text
-    img = font.render(f't={trail_time:.1f}s fr={frame_counter:,}', True, WHITE)
+    img = font.render(f't={elapsed_time:.1f}s fr={frame_counter:,}', True, WHITE)
     screen.blit(img, (20, 20))
 
     # print(f'axes: {np.array2string(np.array(jsInputs),precision=2)} '
