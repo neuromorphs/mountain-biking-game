@@ -28,7 +28,7 @@ def countdown_timer(duration, window):
 ##############################
 # PARTICIPANT INFO
 participant = 'Test'
-output_path = os.path.join('./output', participant + '_' + datetime.now().strftime("%d_%m_%Y_%H_%M"))
+output_path = os.path.join('./results', participant + '_' + datetime.now().strftime("%d_%m_%Y_%H_%M"))
 os.makedirs(output_path, exist_ok=True)
 
 # PARAMETERS DEBUGGING
@@ -41,7 +41,7 @@ do_rest = True
 rest_time = 60
 countdown_duration = rest_time
 # Define the command to run the Python script. Eventually, add args as new elements of the list
-command = ['python3', 'mountain_biking.py']
+base_command = ['python3', 'mountain_biking.py', participant, output_path]
 # visual
 ratio_text_size = 40
 ratio_text_width=2
@@ -160,6 +160,8 @@ for i in range(nr_trials):
 	win.flip()
 
 	# Run the command and capture the output
+	traial_name = "trial_" + str(i+1)
+	command = base_command + [traial_name]
 	output = subprocess.run(command, capture_output=True, text=True)
 
 	# Check the return code to see if the script ran successfully

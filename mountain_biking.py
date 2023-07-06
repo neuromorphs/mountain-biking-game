@@ -21,8 +21,12 @@ my_prefs=prefs()
 #################
 # data file has this header
 
-SUBJECT='Karan'
+arguments = sys.argv[1:]
+SUBJECT = arguments[0]  #'Karan'
+output_path = arguments[1]  #'./results'
+trial_name = arguments[2]  
 
+stop_time = 10
 FPS = 100
 
 #################	
@@ -140,7 +144,7 @@ trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
 # row_iterator = reader.__iter__()
 
 # data file
-data_file_name=os.path.join('results',SUBJECT+' '+datetime.now().strftime('%Y-%m %d-%H-%M')+'.csv')
+data_file_name=os.path.join(output_path, SUBJECT + '_' + trial_name +'.csv')  # datetime.now().strftime('%Y-%m %d-%H-%M')
 data_file=open(data_file_name,'w')
 data_file.write('# Mountain biking error Telluride 2023\n')
 data_file.write('time(s),error,trail_pos\n')
@@ -198,8 +202,9 @@ while not done:
     # read trail info
     try:
         current_row = next(trail_reader)
-        # if float(current_row['time'])>10: # debug rewind
-        #     raise StopIteration()
+        if stop_time>0:
+            if float(current_row['time'])>stop_time: # debug rewind
+                raise StopIteration()
     except StopIteration:
         log.info(f'reached end of trail after {frame_counter} frames, rewinding')
         showed_trigger_flash = False
