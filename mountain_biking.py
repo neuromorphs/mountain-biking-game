@@ -33,12 +33,14 @@ ACCUMLATED_RESULTS_FILENAME='accumulated_results.csv'
 
 DRIVE_TIME_LIMIT_S=90 # experiment terminates after this time in seconds
 
+output_path='results'
+trial_name='0'
 arguments = sys.argv[1:]
-SUBJECT = arguments[0]  #'Karan'
-output_path = arguments[1]  #'./results'
-trial_name = arguments[2]
+if len(arguments)==3:
+    driver_name = arguments[0]  #'Karan'
+    output_path = arguments[1]  #'./results'
+    trial_name = arguments[2]
 
-stop_time = 10
 FPS = 100
 
 #################
@@ -219,9 +221,6 @@ while not done:
     # read trail info
     try:
         current_row = next(trail_reader)
-        if stop_time>0:
-            if float(current_row['time'])>stop_time: # debug rewind
-                raise StopIteration()
     except StopIteration:
         log.info(f'reached end of trail after {frame_counter} frames, rewinding')
         showed_trigger_flash = False
@@ -337,15 +336,15 @@ while not done:
             sorted_errors=errors[i]
             sorted_drivers=drivers[i]
             sorted_epoch_times=epoch_times[i]
-            rank=np.searchsorted(sorted_errors.to_numpy(),avg_err)
+            rank=np.searchsorted(sorted_errors.to_numpy(),avg_err)+1
             from easygui import textbox
-            leaderboard_text='Leaderboard\n\nDriver\t\tAverage Error\t\t\tWhen\n'
+            leaderboard_text='Leaderboard\n\nRank\tDriver\t\tAverage Error\t\t\tWhen\n'
             print('************************** Leaderboard *************************\nDriver\t\tAverage Error\t\t\tWhen')
-            top10_counter=0
+            top10_counter=1
             for d,e,t in zip(sorted_drivers,sorted_errors,sorted_epoch_times):
                 datetime_obj = datetime.utcfromtimestamp(t)
                 when=datetime_obj.strftime('%Y-%m-%d %H:%M')
-                txt=f'{d}\t\t{e:.3f}\t\t\t{when}'
+                txt=f'{top10_counter}\t{d}\t\t{e:.3f}\t\t\t{when}'
                 print(txt)
                 leaderboard_text+=txt+'\n'
                 top10_counter+=1
