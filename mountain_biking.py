@@ -1,18 +1,19 @@
 # mountain biking game simplified and written in pure python for Telluride 2023
 # Tobi Delbruck
+import sys
 import os.path
 
 from get_logger import get_logger
+
 log = get_logger()
 from prefs import prefs
 prefs=prefs()
 
 import pygame
 import logitechG27_wheel
-import socket
+# import socket
 import numpy as np
 import csv
-from playsound import playsound
 from datetime import datetime
 from time import time
 from easygui import  enterbox
@@ -20,10 +21,9 @@ import pandas as pd
 import matplotlib as plt
 
 
-# sound that is played at start
-# TRIGGER_SOUND_FILE='cowbell3.wav'
-TRIGGER_SOUND_FILE=None # don't play sound
-
+#################
+## PARAMS
+#################
 # data file has this header
 driver_name=prefs.get('last_driver', '')
 driver_name=enterbox(msg='Enter driver name', title='Driver?', default=driver_name, strip=True)
@@ -33,9 +33,33 @@ ACCUMLATED_RESULTS_FILENAME='accumulated_results.csv'
 
 DRIVE_TIME_LIMIT_S=90 # experiment terminates after this time in seconds
 
+arguments = sys.argv[1:]
+SUBJECT = arguments[0]  #'Karan'
+output_path = arguments[1]  #'./results'
+trial_name = arguments[2]
+
+stop_time = 10
+FPS = 100
+
+#################
+## TRIGGERS
+#################
+# None of those is used at the moment
+# as we are using photodiode to trigger EEG
+
+# Trigger sound
+USE_TRIGGER_SOUND = False
+TRIGGER_SOUND_FILE=None
+if USE_TRIGGER_SOUND:
+    from playsound import playsound
+    TRIGGER_SOUND_FILE='cowbell3.wav'
+
 # COM port for CGX dry electrode
-USE_CGX = True
+USE_CGX = False
 CGX_COM_PORT = 'COM4'
+if USE_CGX:
+    import serial
+    from serial import serial
 
 # Cedrus XID trigger box
 USE_XID = False
@@ -47,9 +71,9 @@ if USE_XID:
         log.error(
             f'cannot load driver DLL for USB serial port? {e}\n You may need to install drivers from https://ftdichip.com/drivers/d2xx-drivers/')
 
-if USE_CGX:
-    import serial
-
+#################
+# General settings
+#################
 # define some colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -73,7 +97,7 @@ brake_pos = [br_th_x, br_th_y]
 throttle_pos = [SX - br_th_x, br_th_y]
 
 SPEED = 2  # how many rows to shift image per pygame tick
-STEERING_RATE = .002 # keyboard steering rate
+STEERING_RATE = .01  # keyboard steering rate
 
 pygame.init()
 window_size = [SX, SY]  # width and height
@@ -82,9 +106,12 @@ pygame.display.set_caption("Mountain biking")
 
 font = pygame.font.SysFont(None, 36)
 
+LIGHT_SPEED = 3
 stars = np.empty(
-    SY) * np.nan  # locations by row of image (from top) of background 'stars' (to show movement through space), range -1 to 1
-star_creation_prob = .1  # chance of having a star in each row of image
+    SY * LIGHT_SPEED) * np.nan  # locations by row of image (from top) of background 'stars' (to show movement through space), range -1 to 1
+blink = np.empty(
+    SY * LIGHT_SPEED) * np.nan
+star_creation_prob = .25  # chance of having a star in each row of image
 trail = np.empty(SY) * np.nan  # locations of trail by row (from top) range -1 to 1
 
 FPS = 100
@@ -132,7 +159,7 @@ trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
 # row_iterator = reader.__iter__()
 
 # data file
-data_file_name=os.path.join('results', driver_name + ' ' + datetime.now().strftime('%Y-%m %d-%H-%M') + '.csv')
+data_file_name=os.path.join(output_path, driver_name + '_' + trial_name +'.csv')  # datetime.now().strftime('%Y-%m %d-%H-%M')
 data_file=open(data_file_name,'w')
 data_file.write('# Mountain biking error Telluride 2023\n')
 data_file.write('time(s),error,trail_pos\n')
@@ -143,6 +170,7 @@ done = False
 throttle01 = 0  # throttle 0-1 range
 brake01 = 0  # brake 0-1 range
 steering11 = 0  # steering angle -1 to 1
+steering11_inertia = 0
 reversed = 0
 jsInputs = None
 start_time=None
@@ -173,12 +201,15 @@ while not done:
         # print(f'reversed={reversed}')
         throttle01 = controller.get_throttle()
         brake01 = controller.get_brake()
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT]:
-        steering11 -= STEERING_RATE
-    elif keys[pygame.K_RIGHT]:
-        steering11 += STEERING_RATE
-    steering11=np.clip(steering11,a_min=-1,a_max=1)
+    else:  # no steering wheel or joystick controller, use steering rate control by arrow keys
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            steering11_inertia -= STEERING_RATE * (abs(steering11_inertia)*5+0.05)
+        elif keys[pygame.K_RIGHT]:
+            steering11_inertia += STEERING_RATE * (abs(steering11_inertia)*5+0.05)
+        steering11 += steering11_inertia
+        steering11_inertia *= 0.9
+        steering11=np.clip(steering11,a_min=-1,a_max=1)
 
     # msgX = bytes([126 + int(steerPos* 126)])
     # msgY = bytes([126 + int(throtPos* 126)])
@@ -188,8 +219,9 @@ while not done:
     # read trail info
     try:
         current_row = next(trail_reader)
-        # if float(current_row['time'])>10: # debug rewind
-        #     raise StopIteration()
+        if stop_time>0:
+            if float(current_row['time'])>stop_time: # debug rewind
+                raise StopIteration()
     except StopIteration:
         log.info(f'reached end of trail after {frame_counter} frames, rewinding')
         showed_trigger_flash = False
@@ -200,15 +232,20 @@ while not done:
         trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
                                       dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
         current_row = next(trail_reader)
+        done = True
+
     trail_time = float(current_row['time'])
     newest_trail_pos = float(current_row['trail_pos']) / 10  # range in file is -10 to +10, map to -1 to +1
 
     # update background stars
     stars[1:] = stars[0:-1]  # shift all the star rows down one
+    blink[1:] = blink[0:-1]
     if np.random.uniform(0, 1) < star_creation_prob:
         stars[0] = np.random.uniform(-1, 1)  # make a new star with low probability
+        blink[0] = np.random.uniform(-1, 1)
     else:
         stars[0] = np.nan
+        blink[0] = np.nan
 
     trail[1:] = trail[0:-1]  # shift all the star rows down one
     trail[0] = newest_trail_pos  # show trail from top of image
@@ -230,7 +267,10 @@ while not done:
             t = i
             h = 5
             r = pygame.Rect(l, t, w, h)
-            pygame.draw.rect(screen, GRAY, r)
+            #c = np.sin(np.sin(stars[i]*1235)+np.sin(time()))*128+128
+            c = np.sin(blink[i])*128+128
+            blink[i] = blink[i] + 0.1
+            pygame.draw.rect(screen, (c, c, c*0.5), r)
 
     # draw line where we are
     pygame.draw.line(screen, BLUE, [0, st_y], [SX, st_y],
