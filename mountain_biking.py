@@ -299,18 +299,24 @@ while not done:
             sorted_epoch_times=epoch_times[i]
             rank=np.searchsorted(sorted_errors.to_numpy(),avg_err)
             from easygui import textbox
+            leaderboard_text='Leaderboard\n\nDriver\t\tAverage Error\t\t\tWhen\n'
             print('************************** Leaderboard *************************\nDriver\t\tAverage Error\t\t\tWhen')
             top10_counter=0
             for d,e,t in zip(sorted_drivers,sorted_errors,sorted_epoch_times):
                 datetime_obj = datetime.utcfromtimestamp(t)
                 when=datetime_obj.strftime('%Y-%m-%d %H:%M')
-                print(f'{d}\t\t{e:.3f}\t\t\t{when}')
+                txt=f'{d}\t\t{e:.3f}\t\t\t{when}'
+                print(txt)
+                leaderboard_text+=txt+'\n'
                 top10_counter+=1
                 if top10_counter>10:
                     break
             print('***************************************************************')
-            print(f'Your error of {avg_err:.3f} ranks you #{rank} of {len(sorted_errors)}')
+            txt=f'Your error of {avg_err:.3f} ranks you #{rank} of {len(sorted_errors)}'
+            print(txt)
+            leaderboard_text+='\n'+txt+'\n'
             print('***************************************************************')
+            textbox(msg=leaderboard_text,title="Leaderboard")
             pygame.quit()
             quit(0)
 
