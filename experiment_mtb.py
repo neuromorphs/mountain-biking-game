@@ -2,7 +2,9 @@
 #### __ IMPORTS ____
 ####################
 # General libraries
-import os
+import os	
+import numpy as np
+import pandas as pd
 from datetime import datetime
 import subprocess
 from psychopy import visual, event, core
@@ -27,23 +29,24 @@ def countdown_timer(duration, window):
 #### __ EXPERIMENT CONFIG ____
 ##############################
 # PARTICIPANT INFO
-participant = 'Test'
+participant = 'Test           ' # 12 characters ALWAYS
 output_path = os.path.join('./results', participant + '_' + datetime.now().strftime("%d_%m_%Y_%H_%M"))
 os.makedirs(output_path, exist_ok=True)
 
 # PARAMETERS DEBUGGING
-full_screen = False 
+full_screen = True 
+ACCUMLATED_RESULTS_FILENAME = 'accumulated_results.csv'
 
 # PARAMETERS EXP
 # presentation
-nr_trials = 10
-do_rest = True
-rest_time = 60
+nr_trials = 1
+do_rest = False
+rest_time = 10
 countdown_duration = rest_time
 # Define the command to run the Python script. Eventually, add args as new elements of the list
 base_command = ['python3', 'mountain_biking.py', participant, output_path]
 # visual
-ratio_text_size = 40
+ratio_text_size = 60
 ratio_text_width=2
 ratio_cross = 40
 contrast = 0.1
@@ -175,6 +178,33 @@ for i in range(nr_trials):
 	fixation.autoDraw = False
 	win.flip()
 
+	# Slide with leaderboard
+	d = pd.read_csv(ACCUMLATED_RESULTS_FILENAME, comment='#')
+	drivers = d['driver']
+	errors = d['error']
+	epoch_times=d['epoch_time']
+	# get the last element of the leaderboard
+	avg_err=errors.iloc[-1]
+	idxs_error= np.argsort(errors)
+	sorted_errors=errors[idxs_error]
+	sorted_drivers=drivers[idxs_error]
+	sorted_epoch_times=epoch_times[idxs_error]
+	rank=np.searchsorted(sorted_errors.to_numpy(),avg_err)+1
+	
+	# Slide intro of each trial
+	text = visual.TextStim(win=win, text=f"Your error of {avg_err:.3f} ranks you #{rank} out of {len(sorted_errors)}" +\
+							"\n\nPress a key when you are ready to continue!",  
+							color="white",
+							contrast=contrast,
+							wrapWidth=max(win.size)/ratio_text_width,
+							height= max(win.size)/ratio_text_size)
+	text.autoDraw = True
+	win.flip()
+	event.waitKeys()
+	if defaultKeyboard.getKeys(keyList=["escape"]):
+		core.quit()
+	text.autoDraw = False	
+
 	## REST
 	if do_rest:
 		# Slide for the breaks
@@ -194,6 +224,31 @@ for i in range(nr_trials):
 
 		# Call the countdown_timer function
 		countdown_timer(countdown_duration, win)
+
+leaderboard_text='Leaderboard (Rank-Driver-Error-When)'
+top10_counter=1
+for d,e,t in zip(sorted_drivers,sorted_errors,sorted_epoch_times):
+	datetime_obj = datetime.utcfromtimestamp(t)
+	when=datetime_obj.strftime('%Y-%m-%d %H:%M')
+	txt=f'{top10_counter}\t\t{d}\t\t{e:.3f}\t\t\t{when}'
+	leaderboard_text+=txt+'\n'
+	top10_counter+=1
+	if top10_counter>10:
+		break
+
+
+### LEADERBOARD
+text = visual.TextStim(win=win, text=leaderboard_text + \
+					   "\n\nPress one final time a key to end the experiment!", 
+					   color="white",
+					   contrast=contrast,
+					   wrapWidth=max(win.size)/ratio_text_width,
+					   height= max(win.size)/ratio_text_size)
+text.autoDraw = True
+win.flip()
+event.waitKeys()
+text.autoDraw = False
+win.close()
 
 
 ### END EXPERIMENT

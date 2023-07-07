@@ -4,10 +4,7 @@ import sys
 import os.path
 
 from get_logger import get_logger
-
 log = get_logger()
-from prefs import prefs
-prefs=prefs()
 
 import pygame
 import logitechG27_wheel
@@ -16,43 +13,31 @@ import numpy as np
 import csv
 from datetime import datetime
 from time import time
-from easygui import  enterbox
-import pandas as pd
-import matplotlib as plt
+from prefs import prefs
+my_prefs=prefs()
 
-
-#################
+#################	
 ## PARAMS
 #################
 # data file has this header
-driver_name=prefs.get('last_driver', '')
 
-ACCUMLATED_RESULTS_FILENAME='accumulated_results.csv'
-
-DRIVE_TIME_LIMIT_S=10 # experiment terminates after this time in seconds
-
-output_path='results'
-trial_name='0'
 arguments = sys.argv[1:]
-if len(arguments)==3:
-    driver_name = arguments[0]  #'Karan'
-    output_path = arguments[1]  #'./results'
-    trial_name = arguments[2]
+SUBJECT = arguments[0]  #'Karan'
+output_path = arguments[1]  #'./results'
+trial_name = arguments[2]  
 
-# driver_name=enterbox(msg='Enter driver name', title='Driver?', default=driver_name, strip=True)
-prefs.put('last_driver', driver_name)
-
+stop_time = 10
 FPS = 100
 
-#################
+#################	
 ## TRIGGERS
 #################
 # None of those is used at the moment
 # as we are using photodiode to trigger EEG
 
-# Trigger sound
+# Trigger sound 
 USE_TRIGGER_SOUND = False
-TRIGGER_SOUND_FILE=None
+TRIGGER_SOUND_FILE=None 
 if USE_TRIGGER_SOUND:
     from playsound import playsound
     TRIGGER_SOUND_FILE='cowbell3.wav'
@@ -66,7 +51,6 @@ if USE_CGX:
 
 # Cedrus XID trigger box
 USE_XID = False
-
 if USE_XID:
     try:
         import pyxid2
@@ -117,8 +101,6 @@ blink = np.empty(
 star_creation_prob = .25  # chance of having a star in each row of image
 trail = np.empty(SY) * np.nan  # locations of trail by row (from top) range -1 to 1
 
-FPS = 100
-
 clock = pygame.time.Clock()
 
 # make a controller
@@ -162,7 +144,7 @@ trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
 # row_iterator = reader.__iter__()
 
 # data file
-data_file_name=os.path.join(output_path, driver_name + '_' + trial_name +'.csv')  # datetime.now().strftime('%Y-%m %d-%H-%M')
+data_file_name=os.path.join(output_path, SUBJECT + '_' + trial_name +'.csv')  # datetime.now().strftime('%Y-%m %d-%H-%M')
 data_file=open(data_file_name,'w')
 data_file.write('# Mountain biking error Telluride 2023\n')
 data_file.write('time(s),error,trail_pos\n')
@@ -182,9 +164,7 @@ start_time=None
 
 # sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 frame_counter = 0
-accumulated_err=0
 showed_trigger_flash = False
-elapsed_time=0
 while not done:
     frame_counter += 1
     time_now=()
@@ -222,6 +202,9 @@ while not done:
     # read trail info
     try:
         current_row = next(trail_reader)
+        if stop_time>0:
+            if float(current_row['time'])>stop_time: # debug rewind
+                raise StopIteration()
     except StopIteration:
         log.info(f'reached end of trail after {frame_counter} frames, rewinding')
         showed_trigger_flash = False
@@ -238,8 +221,8 @@ while not done:
     newest_trail_pos = float(current_row['trail_pos']) / 10  # range in file is -10 to +10, map to -1 to +1
 
     # update background stars
-    stars[1:] = stars[0:-1]  # shift all the star rows down one
-    blink[1:] = blink[0:-1]
+    stars[LIGHT_SPEED:] = stars[0:-LIGHT_SPEED]  # shift all the star rows down one
+    blink[LIGHT_SPEED:] = blink[0:-LIGHT_SPEED]
     if np.random.uniform(0, 1) < star_creation_prob:
         stars[0] = np.random.uniform(-1, 1)  # make a new star with low probability
         blink[0] = np.random.uniform(-1, 1)
@@ -319,49 +302,6 @@ while not done:
             # byte_err=np.int8(frame_counter)
             cgx_serial.write(byte_err)
 
-        # accumulate total error
-        accumulated_err+=np.abs(err)
-
-        # maybe terminate
-        if elapsed_time>DRIVE_TIME_LIMIT_S or keys[pygame.K_ESCAPE] or keys[pygame.K_x]:
-            avg_err=accumulated_err/frame_counter
-            log.info(f'Drive is done after {elapsed_time:.1f}s: Average absolute error: {avg_err:.2f}')
-            with open(ACCUMLATED_RESULTS_FILENAME,'a') as results_file:
-                epoch_time=int(time())
-                results_file.write(f'{driver_name},{avg_err},{epoch_time}\n')
-            d = pd.read_csv(ACCUMLATED_RESULTS_FILENAME, comment='#')
-            drivers = d['driver']
-            errors = d['error']
-            epoch_times=d['epoch_time']
-            i= np.argsort(errors)
-            sorted_errors=errors[i]
-            sorted_drivers=drivers[i]
-            sorted_epoch_times=epoch_times[i]
-            rank=np.searchsorted(sorted_errors.to_numpy(),avg_err)+1
-            from easygui import textbox
-            leaderboard_text='Leaderboard\n\nRank\tDriver\t\tAverage Error\t\t\tWhen\n'
-            print('************************** Leaderboard *************************\nDriver\t\tAverage Error\t\t\tWhen')
-            top10_counter=1
-            for d,e,t in zip(sorted_drivers,sorted_errors,sorted_epoch_times):
-                datetime_obj = datetime.utcfromtimestamp(t)
-                when=datetime_obj.strftime('%Y-%m-%d %H:%M')
-                txt=f'{top10_counter}\t{d}\t\t{e:.3f}\t\t\t{when}'
-                print(txt)
-                leaderboard_text+=txt+'\n'
-                top10_counter+=1
-                if top10_counter>10:
-                    break
-            print('***************************************************************')
-            txt=f'Your error of {avg_err:.3f} ranks you #{rank} of {len(sorted_errors)}'
-            print(txt)
-            leaderboard_text+='\n'+txt+'\n'
-            print('***************************************************************')
-            # textbox(msg=leaderboard_text,title="Leaderboard")
-            pygame.quit()
-            quit(0)
-
-
-
     # draw brake and throttle discs
     if reversed:
         color = RED
@@ -373,7 +313,7 @@ while not done:
     pygame.draw.circle(screen, color, throttle_pos, throttle_ball_rad)
 
     # draw text
-    img = font.render(f't={elapsed_time:.1f}s fr={frame_counter:,}', True, WHITE)
+    img = font.render(f't={trail_time:.1f}s fr={frame_counter:,}', True, WHITE)
     screen.blit(img, (20, 20))
 
     # print(f'axes: {np.array2string(np.array(jsInputs),precision=2)} '
