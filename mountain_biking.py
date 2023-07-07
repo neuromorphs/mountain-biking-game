@@ -29,7 +29,7 @@ driver_name=prefs.get('last_driver', '')
 
 ACCUMLATED_RESULTS_FILENAME='accumulated_results.csv'
 
-DRIVE_TIME_LIMIT_S=10 # experiment terminates after this time in seconds
+DRIVE_TIME_LIMIT_S=90 # experiment terminates after this time in seconds
 
 output_path='results'
 trial_name='0'
