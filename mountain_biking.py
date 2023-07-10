@@ -29,7 +29,7 @@ driver_name=prefs.get('last_driver', '')
 
 ACCUMLATED_RESULTS_FILENAME='accumulated_results.csv'
 
-DRIVE_TIME_LIMIT_S=90 # experiment terminates after this time in seconds
+DRIVE_TIME_LIMIT_S=120 # experiment terminates after this time in seconds
 
 output_path='results'
 trial_name='0'
@@ -38,9 +38,10 @@ if len(arguments)==3:
     driver_name = arguments[0]  #'Karan'
     output_path = arguments[1]  #'./results'
     trial_name = arguments[2]
-
-# driver_name=enterbox(msg='Enter driver name', title='Driver?', default=driver_name, strip=True)
-prefs.put('last_driver', driver_name)
+else:
+    driver_name=enterbox(msg='Enter driver name', title='Driver?', default=driver_name, strip=True)
+    prefs.put('last_driver', driver_name)
+    DRIVE_TIME_LIMIT_S = 60 
 
 FPS = 100
 
@@ -183,7 +184,7 @@ start_time=None
 # sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 frame_counter = 0
 accumulated_err=0
-showed_trigger_flash = False
+trigger_frame_counter = 0
 elapsed_time=0
 while not done:
     frame_counter += 1
@@ -297,8 +298,8 @@ while not done:
     if not np.isnan(err):
         # error measurements start here
         SYNC_BOX_SIZE=50
-        if not showed_trigger_flash:  # detect first time that trail crosses current time line
-            showed_trigger_flash = True
+        if trigger_frame_counter<100:  # detect first time that trail crosses current time line
+            trigger_frame_counter += 1
             start_time=time()
             pygame.draw.rect(screen, WHITE, (SX - SYNC_BOX_SIZE, 0, SYNC_BOX_SIZE, SYNC_BOX_SIZE))  # rect is left top width height
             if not TRIGGER_SOUND_FILE is None:
@@ -356,7 +357,8 @@ while not done:
             print(txt)
             leaderboard_text+='\n'+txt+'\n'
             print('***************************************************************')
-            # textbox(msg=leaderboard_text,title="Leaderboard")
+            if len(arguments)==0:
+                textbox(msg=leaderboard_text,title="Leaderboard")
             pygame.quit()
             quit(0)
 
