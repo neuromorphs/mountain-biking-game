@@ -1,5 +1,7 @@
 # mountain biking game simplified and written in pure python for Telluride 2023
-# Tobi Delbruck
+# Tobi Delbruck and Giorgia Cantisani
+# MIT license
+
 import sys
 import os.path
 
@@ -30,6 +32,11 @@ driver_name=prefs.get('last_driver', '')
 ACCUMLATED_RESULTS_FILENAME='accumulated_results.csv'
 
 DRIVE_TIME_LIMIT_S=120 # experiment terminates after this time in seconds
+# followuing trail files are taken from  https://github.com/neuromorphs/WheelCon which is forked from https://github.com/Doyle-Lab/WheelCon
+# header line added here
+TRAIL_CSV_FILE_NAME = 'trails/trail.csv' # starts with small angles, goes to big angles
+# TRAIL_CSV_FILE_NAME ='trails/Vision Delay.csv' # has only big angles
+TRAIL_CSV_FILE_NAME ='trails/Action Delay.csv' #
 
 output_path='results'
 trial_name='0'
@@ -41,9 +48,9 @@ if len(arguments)==3:
 else:
     driver_name=enterbox(msg='Enter driver name', title='Driver?', default=driver_name, strip=True)
     prefs.put('last_driver', driver_name)
-    DRIVE_TIME_LIMIT_S = 60 
+    DRIVE_TIME_LIMIT_S = 60
 
-FPS = 100
+FPS = 100 # target rendering frames per second
 
 #################
 ## TRIGGERS
@@ -108,7 +115,7 @@ window_size = [SX, SY]  # width and height
 screen = pygame.display.set_mode(window_size)
 pygame.display.set_caption("Mountain biking")
 
-font = pygame.font.SysFont(None, 36)
+font = pygame.font.SysFont(None, 36) # font used for overlay text
 
 LIGHT_SPEED = 3
 stars = np.empty(
@@ -156,8 +163,7 @@ if USE_CGX:
 
 # trail CSV file
 csv.register_dialect('skip-comments', skipinitialspace=True)
-trail_csv_file_name = 'trail.csv'
-trail_csvfile = open(trail_csv_file_name, 'r')
+trail_csvfile = open(TRAIL_CSV_FILE_NAME, 'r')
 trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
                               dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
 # row_iterator = reader.__iter__()
@@ -229,7 +235,7 @@ while not done:
         trail[:] = np.nan
         frame_counter=0
         trail_csvfile.close()
-        trail_csvfile = open(trail_csv_file_name, 'r')
+        trail_csvfile = open(TRAIL_CSV_FILE_NAME, 'r')
         trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
                                       dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
         current_row = next(trail_reader)
@@ -339,13 +345,13 @@ while not done:
             sorted_errors=errors[i]
             sorted_drivers=drivers[i]
             sorted_epoch_times=epoch_times[i]
-            rank=np.searchsorted(sorted_errors.to_numpy(),avg_err)+1
+            rank=np.searchsorted(sorted_errors.to_numpy(),avg_err,side='right')
             from easygui import textbox
             leaderboard_text='Rank\tDriver\tAverage Error\tWhen\n'
             print('************************** Leaderboard *************************\nDriver\t\tAverage Error\tWhen')
             top10_counter=1
             for d,e,t in zip(sorted_drivers,sorted_errors,sorted_epoch_times):
-                datetime_obj = datetime.utcfromtimestamp(t)
+                datetime_obj = datetime.fromtimestamp(t)
                 when=datetime_obj.strftime('%Y-%m-%d %H:%M')
                 txt=f'{top10_counter}\t{d}\t{e:.3f}\t{when}'
                 print(txt)

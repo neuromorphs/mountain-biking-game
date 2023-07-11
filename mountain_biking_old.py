@@ -137,7 +137,7 @@ if USE_CGX:
 
 # trail CSV file
 csv.register_dialect('skip-comments', skipinitialspace=True)
-trail_csv_file_name = 'trail.csv'
+trail_csv_file_name = 'trails/trail.csv'
 trail_csvfile = open(trail_csv_file_name, 'r')
 trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
                               dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
