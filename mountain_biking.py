@@ -300,7 +300,8 @@ while not done:
         SYNC_BOX_SIZE=50
         if trigger_frame_counter<100:  # detect first time that trail crosses current time line
             trigger_frame_counter += 1
-            start_time=time()
+            if start_time is None:
+                start_time=time() # only set start_time once
             pygame.draw.rect(screen, WHITE, (SX - SYNC_BOX_SIZE, 0, SYNC_BOX_SIZE, SYNC_BOX_SIZE))  # rect is left top width height
             if not TRIGGER_SOUND_FILE is None:
                 playsound(TRIGGER_SOUND_FILE)
@@ -340,13 +341,13 @@ while not done:
             sorted_epoch_times=epoch_times[i]
             rank=np.searchsorted(sorted_errors.to_numpy(),avg_err)+1
             from easygui import textbox
-            leaderboard_text='Leaderboard\n\nRank\tDriver\t\tAverage Error\t\t\tWhen\n'
-            print('************************** Leaderboard *************************\nDriver\t\tAverage Error\t\t\tWhen')
+            leaderboard_text='Rank\tDriver\tAverage Error\tWhen\n'
+            print('************************** Leaderboard *************************\nDriver\t\tAverage Error\tWhen')
             top10_counter=1
             for d,e,t in zip(sorted_drivers,sorted_errors,sorted_epoch_times):
                 datetime_obj = datetime.utcfromtimestamp(t)
                 when=datetime_obj.strftime('%Y-%m-%d %H:%M')
-                txt=f'{top10_counter}\t{d}\t\t{e:.3f}\t\t\t{when}'
+                txt=f'{top10_counter}\t{d}\t{e:.3f}\t{when}'
                 print(txt)
                 leaderboard_text+=txt+'\n'
                 top10_counter+=1
@@ -358,7 +359,7 @@ while not done:
             leaderboard_text+='\n'+txt+'\n'
             print('***************************************************************')
             if len(arguments)==0:
-                textbox(msg=leaderboard_text,title="Leaderboard")
+                textbox(msg='Top 10 drives',title="Leaderboard",text=leaderboard_text)
             pygame.quit()
             quit(0)
 
@@ -375,7 +376,7 @@ while not done:
     pygame.draw.circle(screen, color, throttle_pos, throttle_ball_rad)
 
     # draw text
-    img = font.render(f't={elapsed_time:.1f}s fr={frame_counter:,}', True, WHITE)
+    img = font.render(f't={elapsed_time:.1f}/{DRIVE_TIME_LIMIT_S}s', True, WHITE)
     screen.blit(img, (20, 20))
 
     # print(f'axes: {np.array2string(np.array(jsInputs),precision=2)} '
