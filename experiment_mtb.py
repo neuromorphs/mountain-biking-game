@@ -29,7 +29,7 @@ def countdown_timer(duration, window):
 #### __ EXPERIMENT CONFIG ____
 ##############################
 # PARTICIPANT INFO
-participant = 'Test' 
+participant = 'Aaron' 
 output_path = os.path.join('./results', participant + '_' + datetime.now().strftime("%d_%m_%Y_%H_%M"))
 os.makedirs(output_path, exist_ok=True)
 
@@ -39,7 +39,7 @@ ACCUMLATED_RESULTS_FILENAME = 'accumulated_results.csv'
 
 # PARAMETERS EXP
 # presentation
-driving_time_limit = 60
+driving_time_limit = 120
 nr_trials = 10
 do_rest = False
 time_slide_intro_trial = 1
