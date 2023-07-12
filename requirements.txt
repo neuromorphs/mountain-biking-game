@@ -8,3 +8,4 @@ matplotlib
 easygui
 pypref
 pandas
+python-vlc
