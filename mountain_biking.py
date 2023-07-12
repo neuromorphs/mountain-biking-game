@@ -179,7 +179,7 @@ trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
 data_file_name=os.path.join(output_path, driver_name + '_' + trial_name +'.csv')  # datetime.now().strftime('%Y-%m %d-%H-%M')
 data_file=open(data_file_name,'w')
 data_file.write('# Mountain biking error Telluride 2023\n')
-data_file.write('time(s),error,trail_pos\n')
+data_file.write('time(s),error,trail_pos, steering11\n')
 log.info(f'opened {data_file_name} for data')
 
 # game loop
@@ -322,7 +322,7 @@ while not done:
             pygame.draw.rect(screen, BLACK, (SX - SYNC_BOX_SIZE, 0, SYNC_BOX_SIZE, SYNC_BOX_SIZE))  # rect is left top width height
 
         elapsed_time= time() - start_time
-        data_file.write(f'{elapsed_time:.6f},{err:.4f},{current_trail_pos:.4f}\n')
+        data_file.write(f'{elapsed_time:.6f},{err:.4f},{current_trail_pos:.4f},{steering11:.4f}\n')
         pygame.draw.line(screen, RED, [sx2 + current_trail_pos * sx2, st_y], [sx2 + steering11 * sx2, st_y],
                          width=st_line_width)
         if USE_XID and trigger_device is not None:

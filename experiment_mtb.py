@@ -42,8 +42,8 @@ ACCUMLATED_RESULTS_FILENAME = 'accumulated_results.csv'
 driving_time_limit = 60
 nr_trials = 10
 do_rest = False
-time_slide_intro_trial = 1.5
-time_slide_outro_trial = 3.5
+time_slide_intro_trial = 1
+time_slide_outro_trial = 3
 countdown_duration = 3
 # Define the command to run the Python script. Eventually, add args as new elements of the list
 base_command = ['python3', 'mountain_biking.py', participant, output_path, str(driving_time_limit)]
