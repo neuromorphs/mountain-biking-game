@@ -11,7 +11,11 @@ log = get_logger()
 from prefs import prefs
 prefs=prefs()
 
+import os
+os.environ['SDL_AUDIODRIVER'] = 'dsp'
 import pygame
+from pygame import mixer
+
 import logitechG27_wheel
 # import socket
 import numpy as np
@@ -30,25 +34,25 @@ import matplotlib as plt
 driver_name=prefs.get('last_driver', '')
 
 ACCUMLATED_RESULTS_FILENAME='accumulated_results.csv'
-
-DRIVE_TIME_LIMIT_S=120 # experiment terminates after this time in seconds
 # followuing trail files are taken from  https://github.com/neuromorphs/WheelCon which is forked from https://github.com/Doyle-Lab/WheelCon
 # header line added here
 TRAIL_CSV_FILE_NAME = 'trails/trail.csv' # starts with small angles, goes to big angles
 # TRAIL_CSV_FILE_NAME ='trails/Vision Delay.csv' # has only big angles
 TRAIL_CSV_FILE_NAME ='trails/Action Delay.csv' #
 
-output_path='results'
+output_path='./results'
 trial_name='0'
 arguments = sys.argv[1:]
-if len(arguments)==3:
+if len(arguments)==4:
     driver_name = arguments[0]  #'Karan'
     output_path = arguments[1]  #'./results'
-    trial_name = arguments[2]
+    DRIVE_TIME_LIMIT_S = float(arguments[2]) # experiment terminates after this time in seconds
+    trial_name = arguments[3]
 else:
     driver_name=enterbox(msg='Enter driver name', title='Driver?', default=driver_name, strip=True)
     prefs.put('last_driver', driver_name)
     DRIVE_TIME_LIMIT_S = 60
+    music_file = '/mnt/c/Users/gcantisani/Documents/EEG_experiments/pygame-logitechG29_wheel/8bitmusic.mp4'
 
 FPS = 100 # target rendering frames per second
 
@@ -111,6 +115,9 @@ SPEED = 2  # how many rows to shift image per pygame tick
 STEERING_RATE = .01  # keyboard steering rate
 
 pygame.init()
+if len(arguments)<4:
+    mixer.init()
+    music = pygame.mixer.music.load(music_file)
 window_size = [SX, SY]  # width and height
 screen = pygame.display.set_mode(window_size)
 pygame.display.set_caption("Mountain biking")
