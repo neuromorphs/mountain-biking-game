@@ -52,7 +52,7 @@ else:
     driver_name=enterbox(msg='Enter driver name', title='Driver?', default=driver_name, strip=True)
     prefs.put('last_driver', driver_name)
     DRIVE_TIME_LIMIT_S = 60
-    music_file = '/mnt/c/Users/gcantisani/Documents/EEG_experiments/pygame-logitechG29_wheel/8bitmusic.mp4'
+    music_file = '8bitmusic.mp4'
 
 FPS = 100 # target rendering frames per second
 
