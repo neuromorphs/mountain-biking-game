@@ -29,7 +29,7 @@ def countdown_timer(duration, window):
 #### __ EXPERIMENT CONFIG ____
 ##############################
 # PARTICIPANT INFO
-participant = 'Qinyu Chen' 
+participant = 'Test' 
 output_path = os.path.join('./results', participant + '_' + datetime.now().strftime("%d_%m_%Y_%H_%M"))
 os.makedirs(output_path, exist_ok=True)
 

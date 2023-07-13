@@ -11,8 +11,8 @@ log = get_logger()
 from prefs import prefs
 prefs=prefs()
 
+import vlc
 import os
-os.environ['SDL_AUDIODRIVER'] = 'dsp'
 import pygame
 from pygame import mixer
 
@@ -52,7 +52,7 @@ else:
     driver_name=enterbox(msg='Enter driver name', title='Driver?', default=driver_name, strip=True)
     prefs.put('last_driver', driver_name)
     DRIVE_TIME_LIMIT_S = 60
-    music_file = '8bitmusic.mp4'
+    music_file = 'SuperMarioKart8.mp3'
 
 FPS = 100 # target rendering frames per second
 
@@ -115,9 +115,9 @@ SPEED = 2  # how many rows to shift image per pygame tick
 STEERING_RATE = .01  # keyboard steering rate
 
 pygame.init()
-if len(arguments)<4:
-    mixer.init()
-    music = pygame.mixer.music.load(music_file)
+# if len(arguments)<4:
+#     p = vlc.MediaPlayer(music_file)
+#     p.play()
 window_size = [SX, SY]  # width and height
 screen = pygame.display.set_mode(window_size)
 pygame.display.set_caption("Mountain biking")
