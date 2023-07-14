@@ -5,13 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ee96549-2c32-4e4d-ab00-9fc0809c9810" name="Changes" comment="added popup textbox for leaderboard">
-      <change afterPath="$PROJECT_DIR$/media/GetReady.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/media/Sookie_ Sookie.mp3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/Sookie_Sookie_3.mp3" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/accumulated_results.csv" beforeDir="false" afterPath="$PROJECT_DIR$/accumulated_results.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mountain_biking.py" beforeDir="false" afterPath="$PROJECT_DIR$/mountain_biking.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_args.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,6 +49,7 @@
       <recent name="D:\tobid\Dropbox\GitHub\neuromorphs\pygame-logitechG29_wheel.git" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\tobid\Dropbox\GitHub\neuromorphs\pygame-logitechG29_wheel.git\media" />
       <recent name="D:\tobid\Dropbox\GitHub\neuromorphs\pygame-logitechG29_wheel.git\trails" />
       <recent name="D:\tobid\Dropbox\GitHub\neuromorphs\pygame-logitechG29_wheel.git\results" />
     </key>
@@ -137,7 +135,7 @@
       <workItem from="1688419806155" duration="2259000" />
       <workItem from="1688657604894" duration="6290000" />
       <workItem from="1688682799891" duration="1623000" />
-      <workItem from="1689080041232" duration="11043000" />
+      <workItem from="1689080041232" duration="18615000" />
     </task>
     <task id="LOCAL-00001" summary="steering.py shows wheel position and throttle brake for G27 logitech wheel now.  Basis for mountain biking game with pygame">
       <created>1688129148472</created>
@@ -216,7 +214,21 @@
       <option name="project" value="LOCAL" />
       <updated>1689090211463</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="added game mode, starting &quot;get ready to drive&quot; clip, driving song, and endless loop for playing the game. The driving song still could be improved.">
+      <created>1689182345790</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1689182345790</updated>
+    </task>
+    <task id="LOCAL-00013" summary="merged from Giorgia, added text to leaderboard, game can repeat, music synchronized, various other improvements">
+      <created>1689266822616</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1689266822616</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -246,9 +258,12 @@
     <MESSAGE value="added popup textbox for leaderboard" />
     <MESSAGE value="fixed leaderboard, fixed start_time to be actual start time. Changed displayed text to show total drive time" />
     <MESSAGE value="added more trails, fixed rank and time zone for results of top 10" />
-    <option name="LAST_COMMIT_MESSAGE" value="added more trails, fixed rank and time zone for results of top 10" />
+    <MESSAGE value="added game mode, starting &quot;get ready to drive&quot; clip, driving song, and endless loop for playing the game. The driving song still could be improved." />
+    <MESSAGE value="merged from Giorgia, added text to leaderboard, game can repeat, music synchronized, various other improvements" />
+    <option name="LAST_COMMIT_MESSAGE" value="merged from Giorgia, added text to leaderboard, game can repeat, music synchronized, various other improvements" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/pygame_logitechG29_wheel_git$play_game.coverage" NAME="play game Coverage Results" MODIFIED="1689257050006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/pygame_logitechG29_wheel_git$mountain_biking.coverage" NAME="mountain_biking Coverage Results" MODIFIED="1689134541836" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/pygame_logitechG29_wheel_git$steering.coverage" NAME="steering Coverage Results" MODIFIED="1688148229428" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/pygame_logitechG29_wheel_git$logitechG29_wheel.coverage" NAME="logitechG29_wheel Coverage Results" MODIFIED="1688057122312" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
