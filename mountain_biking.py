@@ -32,17 +32,54 @@ except Exception as e:
 #################
 ## PARAMS
 #################
-# data file has this header
-driver_name=prefs.get('last_driver', '')
 
-ACCUMLATED_RESULTS_FILENAME='accumulated_results.csv'
+ACCUMULATED_RESULTS_FILENAME='accumulated_results.csv'
 
-DRIVE_TIME_LIMIT_S=120 # experiment terminates after this time in seconds
-# followuing trail files are taken from  https://github.com/neuromorphs/WheelCon which is forked from https://github.com/Doyle-Lab/WheelCon
+DRIVE_TIME_LIMIT_S=60 # experiment terminates after this time in seconds
+
+# following trail files are taken from  https://github.com/neuromorphs/WheelCon which is forked from https://github.com/Doyle-Lab/WheelCon
 # header line added here
 # TRAIL_CSV_FILE_NAME = 'trails/trail.csv' # starts with small angles, goes to big angles
 # TRAIL_CSV_FILE_NAME ='trails/Vision Delay.csv' # has only big angles
 TRAIL_CSV_FILE_NAME ='trails/Action Delay.csv' # used for actual demo, has lots of sharp turns
+
+# if TRAIL_CSV_FILE_NAME=None, then we generate the track 
+# algorithmically according to following parameters. 
+# The trail always turns back when reaching edge
+TRAIL_SEED=0 # random seed to fix the track
+TRAIL_TURN_INTERVAL_S=3 # Poisson interval, i.e. Poisson rate is 1/TRAIL_TURN_INTERVAL
+TRAIL_ANGLE_LIMIT_DEG=60 # trail angle from vertical limit, sampled uniformly
+
+
+USE_TRIGGER_SOUND = False
+TRIGGER_SOUND_FILE=None
+
+FPS = 100 # target rendering frames per second
+
+# Cedrus XID trigger box
+USE_XID = False
+# COM port for CGX dry electrode
+USE_CGX = False
+CGX_COM_PORT = 'COM4'
+
+# window settings
+SX = 800  # window width, 'size x'
+SY = int(3 * SX / 4)  # window height (size y)
+
+SPEED = 2  # how many rows to shift image per pygame tick
+LIGHT_SPEED = 3  # how fast stars wiggle their brightness
+
+STEERING_RATE = .01  # keyboard steering rate
+USE_MOUSE=True # true to control position directly by mouse x position in window
+
+# sound
+DRIVING_SONG= 'media/Sookie_ Sookie.mp3'
+GET_READY_TO_DRIVE_SOUND= 'media/GetReady.wav'
+
+############ end params
+
+# data file has this header
+driver_name=prefs.get('last_driver', '')
 
 game_mode=True # start assuming we run in demo game mode that continues forever
 output_path='results'
@@ -58,7 +95,6 @@ elif len(arguments)!=0:
     print(f'arguments {arguments} not valid.\nUsage: python mountain_biking.py driver_name output_path trail_name\nZero arguments starts game mode')
     quit(1)
 
-FPS = 100 # target rendering frames per second
 
 #################
 ## TRIGGERS
@@ -67,21 +103,14 @@ FPS = 100 # target rendering frames per second
 # as we are using photodiode to trigger EEG
 
 # Trigger sound
-USE_TRIGGER_SOUND = False
-TRIGGER_SOUND_FILE=None
 if USE_TRIGGER_SOUND:
     from playsound import playsound
     TRIGGER_SOUND_FILE='cowbell3.wav'
 
-# COM port for CGX dry electrode
-USE_CGX = False
-CGX_COM_PORT = 'COM4'
 if USE_CGX:
     import serial
     from serial import serial
 
-# Cedrus XID trigger box
-USE_XID = False
 
 if USE_XID:
     try:
@@ -102,10 +131,7 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 DARKBLUE = (0, 0, 128)
 
-# window settings
-SX = 800  # window width, 'size x'
 sx2 = int(SX / 2)  # half window width
-SY = int(3 * SX / 4)  # window height (size y)
 st_y = int(3 * SY / 4)  # y position of steering line from top
 st_h = int(SY / 10)  # height of steering line
 st_line_width = 3  # width of steering stuff
@@ -115,14 +141,9 @@ br_th_x = int(SX * .2)
 brake_pos = [br_th_x, br_th_y]
 throttle_pos = [SX - br_th_x, br_th_y]
 
-SPEED = 2  # how many rows to shift image per pygame tick
-STEERING_RATE = .01  # keyboard steering rate
 
-# sound
 driving_song_player:vlc.MediaPlayer = None
-DRIVING_SONG= 'media/Sookie_ Sookie.mp3'
 get_ready_sound_player:vlc.MediaPlayer=None
-GET_READY_TO_DRIVE_SOUND= 'media/GetReady.wav'
 if vlc:
     driving_song_player: vlc.MediaPlayer = vlc.MediaPlayer(DRIVING_SONG)
     log.debug(f'loaded song {DRIVING_SONG}')
@@ -149,7 +170,6 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
 
     font = pygame.font.SysFont(None, 36) # font used for overlay text
 
-    LIGHT_SPEED = 3
     stars = np.empty(
         SY * LIGHT_SPEED) * np.nan  # locations by row of image (from top) of background 'stars' (to show movement through space), range -1 to 1
     blink = np.empty(
@@ -194,11 +214,20 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
             log.error(f'will not be able to send steering errors on COM port: {e}')
 
     # trail CSV file
-    csv.register_dialect('skip-comments', skipinitialspace=True)
-    trail_csvfile = open(TRAIL_CSV_FILE_NAME, 'r')
-    trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
-                                  dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
-    # row_iterator = reader.__iter__()
+    trail_csvfile=None
+    trail_reader=None
+    
+    trail_pos_current=0.
+    trail_angle_current=0
+
+    if not TRAIL_CSV_FILE_NAME is None:
+        csv.register_dialect('skip-comments', skipinitialspace=True)
+        trail_csvfile = open(TRAIL_CSV_FILE_NAME, 'r')
+        trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
+                                    dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
+        # row_iterator = reader.__iter__()
+    else: # algorithmic trail
+        np.random.seed(TRAIL_SEED)
 
     # data file
     data_file_name=os.path.join(output_path, driver_name + '_' + trial_name +'.csv')  # datetime.now().strftime('%Y-%m %d-%H-%M')
@@ -250,7 +279,7 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
         steering11_inertia *= 0.9
         steering11 = np.clip(steering11, a_min=-1, a_max=1)
 
-        if not controller is None:
+        if not USE_MOUSE and not controller is None:
             # handle joysticks
             # jsButtons = controller.get_buttons()
             jsInputs = controller.get_axis()
@@ -260,6 +289,11 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
             # print(f'reversed={reversed}')
             throttle01 = controller.get_throttle()
             brake01 = controller.get_brake()
+
+        if USE_MOUSE:
+            mx,my=pygame.mouse.get_pos()
+            steering11=(2.*(mx-sx2))/SX
+            
 
         # msgX = bytes([126 + int(steerPos* 126)])
         # msgY = bytes([126 + int(throtPos* 126)])
@@ -334,7 +368,7 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
                 pygame.draw.rect(screen, WHITE, r)
 
 
-        # draw steering wheeel position
+        # draw steering wheel position
         st_pos_px = sx2 + steering11 * sx2
         pygame.draw.line(screen, GREEN, [st_pos_px, st_y - st_h / 2], [st_pos_px, st_y + st_h / 2], st_line_width)
 
@@ -385,10 +419,10 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
                 driving=False
                 if driving_song_player: driving_song_player.stop()
                 log.info(f'Drive is done after {elapsed_time:.1f}s: Average absolute error: {avg_err:.2f}')
-                with open(ACCUMLATED_RESULTS_FILENAME,'a') as results_file:
+                with open(ACCUMULATED_RESULTS_FILENAME,'a') as results_file:
                     epoch_time=int(time())
                     results_file.write(f'{driver_name},{avg_err},{epoch_time}\n')
-                d = pd.read_csv(ACCUMLATED_RESULTS_FILENAME, comment='#')
+                d = pd.read_csv(ACCUMULATED_RESULTS_FILENAME, comment='#')
                 drivers = d['driver']
                 errors = d['error']
                 epoch_times=d['epoch_time']
