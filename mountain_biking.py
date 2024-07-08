@@ -42,19 +42,22 @@ DRIVE_TIME_LIMIT_S=60 # experiment terminates after this time in seconds
 # TRAIL_CSV_FILE_NAME = 'trails/trail.csv' # starts with small angles, goes to big angles
 # TRAIL_CSV_FILE_NAME ='trails/Vision Delay.csv' # has only big angles
 TRAIL_CSV_FILE_NAME ='trails/Action Delay.csv' # used for actual demo, has lots of sharp turns
+# set TRAIL_CSV_FILE_NAME=None to use algorithmic trail
+TRAIL_CSV_FILE_NAME = None # for algorithmic trail
+ALGORITHMIC_TRAIL = True if TRAIL_CSV_FILE_NAME is None else False
 
 # if TRAIL_CSV_FILE_NAME=None, then we generate the track 
 # algorithmically according to following parameters. 
 # The trail always turns back when reaching edge
-TRAIL_SEED=0 # random seed to fix the track
-TRAIL_TURN_INTERVAL_S=3 # Poisson interval, i.e. Poisson rate is 1/TRAIL_TURN_INTERVAL
-TRAIL_ANGLE_LIMIT_DEG=60 # trail angle from vertical limit, sampled uniformly
+TRAIL_SEED=1 # random seed to fix the track
+TRAIL_TURN_INTERVAL_S=1 # Poisson interval, i.e. Poisson rate is 1/TRAIL_TURN_INTERVAL
+TRAIL_ANGLE_LIMIT_DEG=45 # trail angle from vertical limit, sampled uniformly
+SPEED = 2  # how many rows to shift image per pygame tick
 
 
 USE_TRIGGER_SOUND = False
 TRIGGER_SOUND_FILE=None
 
-FPS = 100 # target rendering frames per second
 
 # Cedrus XID trigger box
 USE_XID = False
@@ -62,11 +65,14 @@ USE_XID = False
 USE_CGX = False
 CGX_COM_PORT = 'COM4'
 
+FPS = 100 # target rendering frames per second, for now this must 
+# match the timestep (10ms) in the CSV files because we have not yet
+#  coded showing the rows at a particular wall clock time
+
 # window settings
 SX = 800  # window width, 'size x'
 SY = int(3 * SX / 4)  # window height (size y)
 
-SPEED = 2  # how many rows to shift image per pygame tick
 LIGHT_SPEED = 3  # how fast stars wiggle their brightness
 
 STEERING_RATE = .01  # keyboard steering rate
@@ -177,8 +183,6 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
     star_creation_prob = .25  # chance of having a star in each row of image
     trail = np.empty(SY) * np.nan  # locations of trail by row (from top) range -1 to 1
 
-    FPS = 100
-
     clock = pygame.time.Clock()
 
     # make a controller
@@ -226,7 +230,7 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
         trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
                                     dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
         # row_iterator = reader.__iter__()
-    else: # algorithmic trail
+    elif ALGORITHMIC_TRAIL: # algorithmic trail
         np.random.seed(TRAIL_SEED)
 
     # data file
@@ -255,16 +259,17 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
     trigger_frame_counter = 0
     elapsed_time=0
     driving_started=False # set True when path crosses current time line
-
+    trail_pos_current=0 # current location of trail
     if vlc and game_mode:
         get_ready_sound_player=vlc.MediaPlayer(GET_READY_TO_DRIVE_SOUND)
         get_ready_sound_player.play()
 
-
+    time_now=time()
+    time_start=time_now
+    time_last=time_now
     while driving:
         frame_counter += 1
-        time_now=()
-
+ 
         # event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -300,23 +305,47 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
         # msgZ = bytes([126 + int(breakPos* 126)])
         # sock.sendto(msgX + msgY + msgZ,("127.0.0.1", 5005))
 
-        # read trail info
-        try:
-            current_row = next(trail_reader)
-        except StopIteration:
-            log.info(f'reached end of trail after {frame_counter} frames, rewinding')
-            showed_trigger_flash = False
-            trail[:] = np.nan
-            frame_counter=0
-            trail_csvfile.close()
-            trail_csvfile = open(TRAIL_CSV_FILE_NAME, 'r')
-            trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
-                                          dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
-            current_row = next(trail_reader)
-            done = True
+        time_now=time()
+        time_delta=time_now-time_last
+        time_last=time_now
 
-        trail_time = float(current_row['time'])
-        newest_trail_pos = float(current_row['trail_pos']) / 10  # range in file is -10 to +10, map to -1 to +1
+        # read or generate trail info
+        if not TRAIL_CSV_FILE_NAME is None:
+            try:
+                current_row = next(trail_reader)
+            except StopIteration:
+                log.info(f'reached end of trail after {frame_counter} frames, rewinding')
+                showed_trigger_flash = False
+                trail[:] = np.nan
+                frame_counter=0
+                trail_csvfile.close()
+                trail_csvfile = open(TRAIL_CSV_FILE_NAME, 'r')
+                trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile),
+                                            dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
+                current_row = next(trail_reader)
+                time_start=time.time()
+                done = True
+            trail_time = float(current_row['time'])
+            trail_pos_current = float(current_row['trail_pos']) / 10  # range in file is -10 to +10, map to -1 to +1
+        elif ALGORITHMIC_TRAIL:  # generate trail
+            turn_now=False
+            if np.random.random()<time_delta/TRAIL_TURN_INTERVAL_S:  # generate turns with Poisson distribution, like Geiger counter
+                turn_now=True
+            elif trail_pos_current>1:
+                trail_pos_current=1
+                turn_now=True
+            elif trail_pos_current<=-1: # turn if we reach the edge
+                turn_now=True
+                trail_pos_current=-1
+            if turn_now:
+                new_angle_mag=np.random.random()*TRAIL_ANGLE_LIMIT_DEG
+                if trail_angle_current>0: # turn in opposite direction
+                    trail_angle_current= -new_angle_mag
+                else:
+                    trail_angle_current= new_angle_mag
+                log.info(f'angle={trail_angle_current}deg, position={trail_pos_current}')
+            trail_pos_current+=np.sin(np.pi*trail_angle_current/180)*time_delta*SPEED
+
 
         # update background stars
         stars[1:] = stars[0:-1]  # shift all the star rows down one
@@ -329,7 +358,7 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
             blink[0] = np.nan
 
         trail[1:] = trail[0:-1]  # shift all the star rows down one
-        trail[0] = newest_trail_pos  # show trail from top of image
+        trail[0] = trail_pos_current  # show trail from top of image
         current_trail_pos = trail[st_y]  # the trail at the current timeline, target for user -1 to 1
 
         # drawing
@@ -483,8 +512,8 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
 
         # update screen
         pygame.display.flip()
-        clock.tick(FPS)
-
+        ms_since_last_frame=clock.tick(FPS) # This method should be called once per frame. It will compute how many milliseconds have passed since the previous call.
+        # log.info(f'{ms_since_last_frame:.2f}ms since last frame')
 # close window on quit
 log.info('quitting pygame')
 pygame.quit()
