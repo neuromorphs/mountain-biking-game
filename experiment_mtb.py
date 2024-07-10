@@ -2,7 +2,8 @@
 #### __ IMPORTS ____
 ####################
 # General libraries
-import os	
+import os
+import sys	
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -33,13 +34,13 @@ def countdown_timer(duration, window):
 #### __ EXPERIMENT CONFIG ____
 ##############################
 # PARTICIPANT INFO
-participant = 'Test' 
+participant = 'Test'  # name of subject
 output_path = os.path.join('./results', participant + '_' + datetime.now().strftime("%d_%m_%Y_%H_%M"))
 os.makedirs(output_path, exist_ok=True)
 
 # PARAMETERS DEBUGGING
-full_screen = True 
-ACCUMLATED_RESULTS_FILENAME = 'accumulated_results.csv'
+full_screen = False # set to True for real experiment 
+ACCUMULATED_RESULTS_FILENAME = 'accumulated_results.csv'
 
 # PARAMETERS EXP
 # presentation
@@ -51,7 +52,7 @@ time_slide_outro_trial = 3
 countdown_duration = 3
 difficulty=3 # 1-5 difficulty, 1 is easiest
 # Define the command to run the Python script. Eventually, add args as new elements of the list
-base_command = ['python3', 'mountain_biking.py', participant, output_path, str(difficulty), str(driving_time_limit)]
+base_command = ['python3', 'mountain_biking.py', f'--driver_name={participant}', f'--output_path={output_path}', f'--difficulty={difficulty}']
 # visual
 ratio_text_size = 60
 ratio_text_width=2
@@ -95,7 +96,7 @@ text.autoDraw = True
 win.flip()
 event.waitKeys()
 if defaultKeyboard.getKeys(keyList=["escape"]):
-	core.quit()
+	sys.exit("terminated early with ESC")
 text.autoDraw = False
 
 # Slide 2
@@ -110,7 +111,7 @@ text.autoDraw = True
 win.flip()
 event.waitKeys()
 if defaultKeyboard.getKeys(keyList=["escape"]):
-	core.quit()
+	sys.exit("terminated early with ESC")
 text.autoDraw = False
 
 # Slide 3
@@ -125,7 +126,7 @@ text.autoDraw = True
 win.flip()
 event.waitKeys()
 if defaultKeyboard.getKeys(keyList=["escape"]):
-	core.quit()
+	sys.exit("terminated early with ESC")
 text.autoDraw = False
 
 # Stimuli presentation begins
@@ -151,7 +152,7 @@ for i in range(nr_trials):
 	win.flip()
 
 	# Run the command and capture the output
-	trial_name = "trial_" + str(i+1)
+	trial_name = "--trial_name=trial_" + str(i+1)
 	command = base_command + [trial_name]
 	log.info(f'running subprocess "{command}"')
 	output = subprocess.run(command, capture_output=True, text=True)
@@ -162,14 +163,14 @@ for i in range(nr_trials):
 		log.info(output.stdout)
 	else:
 		log.error("Script execution failed.")
-		core.quit()
+		sys.exit("terminated early with escape")
 
 	# Remove fixaxtion cross
 	fixation.autoDraw = False
 	win.flip()
 
 	# Slide with leaderboard
-	d = pd.read_csv(ACCUMLATED_RESULTS_FILENAME, comment='#')
+	d = pd.read_csv(ACCUMULATED_RESULTS_FILENAME, comment='#')
 	drivers = d['driver']
 	errors = d['error']
 	epoch_times=d['epoch_time']
@@ -191,7 +192,7 @@ for i in range(nr_trials):
 	win.flip()
 	event.waitKeys()
 	if defaultKeyboard.getKeys(keyList=["escape"]):
-		core.quit()
+		sys.exit("terminated early with ESC")
 	core.wait(time_slide_outro_trial)
 	text.autoDraw = False	
 
@@ -209,7 +210,7 @@ for i in range(nr_trials):
 		win.flip()
 		event.waitKeys()
 		if defaultKeyboard.getKeys(keyList=["escape"]):
-			core.quit()
+			sys.exit("terminated early with ESC")
 		text.autoDraw = False	
 
 		# Call the countdown_timer function

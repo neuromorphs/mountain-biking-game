@@ -5,12 +5,23 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python C++ Debugger",
-            "type": "pythoncpp",
+            "name": "Attach",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+              "host": "localhost", // replace this with remote machine name
+              "port": 5678
+            }
+          },
+        
+        {
+            "name": "experiment",
+            "type": "debugpy",
             "request": "launch",
-            "pythonLaunchName": "Python: Current File",
-            "cppAttachName": "'(Windows) Attach' or '(gdb) Attach'"
-        },
+            "program": "experiment_mtb.py",
+            "args": [],
+            "console": "integratedTerminal"
+        },,
         
         {
             "name": "experiment-game",
@@ -22,11 +33,11 @@
         },
         
         {
-            "name": "demo easy",
+            "name": "demo defeault",
             "type": "debugpy",
             "request": "launch",
             "program": "mountain_biking.py",
-            "args": ["--difficulty=1"],
+            "args": [],
             "console": "integratedTerminal"
         },
         

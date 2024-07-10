@@ -22,6 +22,17 @@ from easygui import  enterbox
 import pandas as pd
 import matplotlib as plt
 
+# import debugpy 
+# uncommment to attach to this process if running as subprocess from experiment_mtb.py
+
+# # 5678 is the default attach port in the VS Code debug configurations. Unless a host and port are specified, host defaults to 127.0.0.1
+# # https://code.visualstudio.com/docs/python/debugging#_local-script-debugging
+# debugpy.listen(5678)
+# print("Waiting for debugger attach at port 5678")
+# debugpy.wait_for_client()
+# debugpy.breakpoint()
+# print('break on this line')
+
 try:
     import vlc
 except Exception as e:
@@ -49,10 +60,11 @@ ALGORITHMIC_TRAIL = True if TRAIL_CSV_FILE_NAME is None else False
 # if TRAIL_CSV_FILE_NAME=None, then we generate the track 
 # algorithmically according to following parameters. 
 # The trail always turns back when reaching edge
-TRAIL_SEED=1 # random seed to fix the track
+TRAIL_SEED=0 # random seed to fix the track
 TRAIL_TURN_INTERVAL_S=1 # Poisson interval, i.e. Poisson rate is 1/TRAIL_TURN_INTERVAL
 TRAIL_ANGLE_LIMIT_DEG=45 # trail angle from vertical limit, sampled uniformly
 SPEED = 2  # how many rows to shift image per pygame tick
+TRACK_WIDTH = .3  # width of track as fraction of -1 to +1 range
 
 
 USE_TRIGGER_SOUND = False
@@ -65,7 +77,8 @@ USE_XID = False
 USE_CGX = False
 CGX_COM_PORT = 'COM4'
 
-FPS = 100 # target rendering frames per second, for now this must 
+FPS = 60 # changed to 60 for algorithmic trails
+# target rendering frames per second, for now this must 
 # match the timestep (10ms) in the CSV files because we have not yet
 #  coded showing the rows at a particular wall clock time
 
@@ -93,7 +106,7 @@ output_path='results'
 trial_name='0' # trial number string to append to results CSV file name
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('--driver_name','-n', type=str, help='name of driver, e.g. tobi', default='testuser')
+parser.add_argument('--driver_name','-n', type=str, help='name of driver, e.g. tobi', default=None)
 parser.add_argument('--output_path', '-o', type=str, help='output folder', default='./results')
 parser.add_argument('--trial_name','-t', type=str, help='Trial name to append to results CSV file name', default='0')
 parser.add_argument('--difficulty','-d', help="trail difficulty, range 1-5", default=1,type=int)
@@ -108,16 +121,18 @@ def print_usage(log, arguments):
     
 def get_params_from_difficulty_level(diff:int)->(float,float,int):
     ''' Computes the turn rate and max turn angle based on scalar difficulty
-    :param diff: 1-5 level
-    :returns: tuple (turn_interval_s,max_angle_deg
+    :param diff: 1-10 level
+    :returns: tuple (turn_interval_s,max_angle_deg, speed in rows/frame, track_width as fraction of 2)
     '''
-    if diff>5 or diff<1:
+    if diff>10 or diff<1:
         raise Exception(f'diff of {diff} is invalid, difficulty range is 1-5')
     turn_interval_s=5./diff # diff=1 makes 5 seconds avg per turn, diff=4 makes 1 per second
     max_angle_deg= 70*(diff/5.)
-    speed=diff
+    speed=int((diff+1)/2)
+    track_width=0.6*/diff
     log.info(f'difficulty={diff} results in turn_interval={turn_interval_s}s, max_angle={max_angle_deg}deg, speed={speed} lines/frame')
-    return turn_interval_s,max_angle_deg,speed
+    
+    return turn_interval_s,max_angle_deg,speed, track_width
 
 if len(sys.argv)>1:
     try:
@@ -126,7 +141,7 @@ if len(sys.argv)>1:
         output_path = args.output_path  #'./results'
         trial_name = args.trial_name
         diff=args.difficulty
-        TRAIL_TURN_INTERVAL_S,TRAIL_ANGLE_LIMIT_DEG, SPEED=get_params_from_difficulty_level(diff)
+        TRAIL_TURN_INTERVAL_S,TRAIL_ANGLE_LIMIT_DEG, SPEED, TRACK_WIDTH=get_params_from_difficulty_level(diff)
         
         log.info(f'running in EEG experiment mode with driver_name={driver_name} output_path={output_path} trial_name={trial_name} turn_interval_s={TRAIL_TURN_INTERVAL_S} max_angle_deg={TRAIL_ANGLE_LIMIT_DEG} speed={SPEED} rows/frame')
         
@@ -134,9 +149,7 @@ if len(sys.argv)>1:
         log.error(e)
         print_usage(log, arguments)
 
-elif len(arguments)!=0:
-    print_usage(log, arguments)
-    quit(1)
+
 
 
 #################

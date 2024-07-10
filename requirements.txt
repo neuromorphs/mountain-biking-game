@@ -6,7 +6,8 @@ pyserial
 playsound
 matplotlib
 easygui
-pypref
+pypref # storing last user, etc
 pandas
-python-vlc
-psychopy
+python-vlc # demo mode music
+psychopy # for experiments
+debugpy # to debug subprocess lanch of game
