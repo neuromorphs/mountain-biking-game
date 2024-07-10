@@ -47,7 +47,7 @@ def get_logger(name='ControlToolkit'):
     :returns: the logger.
     """
     # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    logger = logging.getLogger('ControlToolkit') # tobi changed so all have same name so we can uniformly affect all of them
+    logger = logging.getLogger('LOG') # tobi changed so all have same name so we can uniformly affect all of them
     logger.setLevel(LOGGING_LEVEL)
     # create console handler if this logger does not have handler yet
     if len(logger.handlers)==0:

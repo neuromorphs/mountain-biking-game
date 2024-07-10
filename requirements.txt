@@ -9,3 +9,4 @@ easygui
 pypref
 pandas
 python-vlc
+psychopy

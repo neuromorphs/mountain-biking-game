@@ -9,6 +9,10 @@ from datetime import datetime
 import subprocess
 from psychopy import visual, event, core
 from psychopy.hardware import keyboard
+
+from get_logger import get_logger
+log = get_logger() # tobi's logger for printing more informative logging messsages
+
 defaultKeyboard = keyboard.Keyboard(backend='iohub') 
 
 # Special functions
@@ -45,8 +49,9 @@ do_rest = False
 time_slide_intro_trial = 1
 time_slide_outro_trial = 3
 countdown_duration = 3
+difficulty=3 # 1-5 difficulty, 1 is easiest
 # Define the command to run the Python script. Eventually, add args as new elements of the list
-base_command = ['python3', 'mountain_biking.py', participant, output_path, str(driving_time_limit)]
+base_command = ['python3', 'mountain_biking.py', participant, output_path, str(difficulty), str(driving_time_limit)]
 # visual
 ratio_text_size = 60
 ratio_text_width=2
@@ -146,16 +151,18 @@ for i in range(nr_trials):
 	win.flip()
 
 	# Run the command and capture the output
-	traial_name = "trial_" + str(i+1)
-	command = base_command + [traial_name]
+	trial_name = "trial_" + str(i+1)
+	command = base_command + [trial_name]
+	log.info(f'running subprocess "{command}"')
 	output = subprocess.run(command, capture_output=True, text=True)
 
 	# Check the return code to see if the script ran successfully
 	if output.returncode == 0:
-		print("Script executed successfully.")
-		print(output.stdout)
+		log.info("Script executed successfully.")
+		log.info(output.stdout)
 	else:
-		print("Script execution failed.")
+		log.error("Script execution failed.")
+		core.quit()
 
 	# Remove fixaxtion cross
 	fixation.autoDraw = False
@@ -182,6 +189,9 @@ for i in range(nr_trials):
 							height= max(win.size)/ratio_text_size)
 	text.autoDraw = True
 	win.flip()
+	event.waitKeys()
+	if defaultKeyboard.getKeys(keyList=["escape"]):
+		core.quit()
 	core.wait(time_slide_outro_trial)
 	text.autoDraw = False	
 

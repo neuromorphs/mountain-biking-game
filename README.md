@@ -28,3 +28,11 @@ Just run mountain_biking:
 ```python
 python mountain_biking.py
 ```
+The "Get ready to start" sound and the music are played with the game.
+
+### Running sequence of games for EEG/pupilometry experiment
+The script *experiment_mtb.py* runs the game repeatedly as subprocess and shows the subject what they need to do with slides.
+
+```
+python experiment_mtb.py
+```

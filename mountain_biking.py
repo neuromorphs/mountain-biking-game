@@ -87,18 +87,55 @@ GET_READY_TO_DRIVE_SOUND= 'media/GetReady.wav'
 # data file has this header
 driver_name=prefs.get('last_driver', '')
 
-game_mode=True # start assuming we run in demo game mode that continues forever
+# argument processing
+demo_mode=True # start assuming we run in demo game mode that continues forever
 output_path='results'
-trial_name='0'
-arguments = sys.argv[1:]
-if len(arguments)==3:
-    game_mode=False # only run once
-    driver_name = arguments[0]  #'Karan'
-    output_path = arguments[1]  #'./results'
-    trial_name = arguments[2]
-    log.info(f'running in EEG experiment mode with driver_name={driver_name} output_path={output_path} trial_name={trial_name}')
+trial_name='0' # trial number string to append to results CSV file name
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--driver_name','-n', type=str, help='name of driver, e.g. tobi', default='testuser')
+parser.add_argument('--output_path', '-o', type=str, help='output folder', default='./results')
+parser.add_argument('--trial_name','-t', type=str, help='Trial name to append to results CSV file name', default='0')
+parser.add_argument('--difficulty','-d', help="trail difficulty, range 1-5", default=1,type=int)
+# parser.add_help("Run with no arguments for demo mode with repeating games")
+args=parser.parse_args()
+
+
+def print_usage(log, arguments):
+    log.error(f'arguments {arguments} not valid.\n'
+              'Usage: python mountain_biking.py driver_name output_path trail_name difficulty(1-5)\n'
+              'Zero arguments starts game mode')
+    
+def get_params_from_difficulty_level(diff:int)->(float,float,int):
+    ''' Computes the turn rate and max turn angle based on scalar difficulty
+    :param diff: 1-5 level
+    :returns: tuple (turn_interval_s,max_angle_deg
+    '''
+    if diff>5 or diff<1:
+        raise Exception(f'diff of {diff} is invalid, difficulty range is 1-5')
+    turn_interval_s=5./diff # diff=1 makes 5 seconds avg per turn, diff=4 makes 1 per second
+    max_angle_deg= 70*(diff/5.)
+    speed=diff
+    log.info(f'difficulty={diff} results in turn_interval={turn_interval_s}s, max_angle={max_angle_deg}deg, speed={speed} lines/frame')
+    return turn_interval_s,max_angle_deg,speed
+
+if len(sys.argv)>1:
+    try:
+        demo_mode=False # only run once for experiment controlled by experiment_mtb.py
+        driver_name = args.driver_name  #'Karan'
+        output_path = args.output_path  #'./results'
+        trial_name = args.trial_name
+        diff=args.difficulty
+        TRAIL_TURN_INTERVAL_S,TRAIL_ANGLE_LIMIT_DEG, SPEED=get_params_from_difficulty_level(diff)
+        
+        log.info(f'running in EEG experiment mode with driver_name={driver_name} output_path={output_path} trial_name={trial_name} turn_interval_s={TRAIL_TURN_INTERVAL_S} max_angle_deg={TRAIL_ANGLE_LIMIT_DEG} speed={SPEED} rows/frame')
+        
+    except Exception as e:
+        log.error(e)
+        print_usage(log, arguments)
+
 elif len(arguments)!=0:
-    print(f'arguments {arguments} not valid.\nUsage: python mountain_biking.py driver_name output_path trail_name\nZero arguments starts game mode')
+    print_usage(log, arguments)
     quit(1)
 
 
@@ -158,7 +195,7 @@ driving = True # flag True during a drive
 playing_game=True # flag True while doing multiple drives
 
 while playing_game: # run games until we quit or if game_mode==False then we quit after one run
-    if game_mode: # not collecting data
+    if demo_mode: # not collecting data
         driver_name=prefs.get('last_driver','')
         driver_name = enterbox(msg='Enter driver name', title='Start a new drive', default=driver_name, strip=True)
         if driver_name is None:
@@ -260,7 +297,7 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
     elapsed_time=0
     driving_started=False # set True when path crosses current time line
     trail_pos_current=0 # current location of trail
-    if vlc and game_mode:
+    if vlc and demo_mode:
         get_ready_sound_player=vlc.MediaPlayer(GET_READY_TO_DRIVE_SOUND)
         get_ready_sound_player.play()
 
@@ -343,7 +380,7 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
                     trail_angle_current= -new_angle_mag
                 else:
                     trail_angle_current= new_angle_mag
-                log.info(f'angle={trail_angle_current}deg, position={trail_pos_current}')
+                # log.info(f'angle={trail_angle_current}deg, position={trail_pos_current}')
             trail_pos_current+=np.sin(np.pi*trail_angle_current/180)*time_delta*SPEED
 
 
@@ -406,7 +443,7 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
         # print(f'error={err:.3f}')
         if not np.isnan(err): # measurement starts here, path has crossed line of driving
             if not driving_started:
-                if vlc and game_mode:
+                if vlc and demo_mode:
                     driving_song_player: vlc.MediaPlayer = vlc.MediaPlayer(DRIVING_SONG)
                     log.debug(f'loaded song {DRIVING_SONG} and starting it')
                     driving_song_player.play()
@@ -479,7 +516,7 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
                 print(txt)
                 leaderboard_text+='\n'+txt+'\n'
                 print('***************************************************************')
-                if game_mode:
+                if demo_mode:
                     ret=textbox(msg='Top 10 drives',title="Leaderboard",text=leaderboard_text)
                     if ret is None: # cancelled
                         done=True

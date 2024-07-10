@@ -1,0 +1,51 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python C++ Debugger",
+            "type": "pythoncpp",
+            "request": "launch",
+            "pythonLaunchName": "Python: Current File",
+            "cppAttachName": "'(Windows) Attach' or '(gdb) Attach'"
+        },
+        
+        {
+            "name": "experiment-game",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "mountain_biking.py",
+            "args": ["--driver_name=testuser", "--output_path=results", "--trial_name=0", "--difficulty=1"],
+            "console": "integratedTerminal"
+        },
+        
+        {
+            "name": "demo easy",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "mountain_biking.py",
+            "args": ["--difficulty=1"],
+            "console": "integratedTerminal"
+        },
+        
+        {
+            "name": "demo middle hard",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "mountain_biking.py",
+            "args": ["--difficulty=3"],
+            "console": "integratedTerminal"
+        },
+        
+        {
+            "name": "demo hardest",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "mountain_biking.py",
+            "args": ["--difficulty=5"],
+            "console": "integratedTerminal"
+        }
+    ]
+}
