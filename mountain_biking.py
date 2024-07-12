@@ -129,7 +129,7 @@ def get_params_from_difficulty_level(diff:int)->(float,float,int):
     turn_interval_s=5./diff # diff=1 makes 5 seconds avg per turn, diff=4 makes 1 per second
     max_angle_deg= 70*(diff/5.)
     speed=int((diff+1)/2)
-    track_width=0.6*/diff
+    track_width=0.6*diff
     log.info(f'difficulty={diff} results in turn_interval={turn_interval_s}s, max_angle={max_angle_deg}deg, speed={speed} lines/frame')
     
     return turn_interval_s,max_angle_deg,speed, track_width
@@ -148,32 +148,6 @@ if len(sys.argv)>1:
     except Exception as e:
         log.error(e)
         print_usage(log, arguments)
-
-
-
-
-#################
-## TRIGGERS
-#################
-# None of those is used at the moment
-# as we are using photodiode to trigger EEG
-
-# Trigger sound
-if USE_TRIGGER_SOUND:
-    from playsound import playsound
-    TRIGGER_SOUND_FILE='cowbell3.wav'
-
-if USE_CGX:
-    import serial
-    from serial import serial
-
-
-if USE_XID:
-    try:
-        import pyxid2
-    except FileNotFoundError as e:
-        log.error(
-            f'cannot load driver DLL for USB serial port? {e}\n You may need to install drivers from https://ftdichip.com/drivers/d2xx-drivers/')
 
 #################
 # General settings
@@ -196,7 +170,6 @@ br_th_y = int(SY * .9)  # from top, y starts with 0 at top of pygame display
 br_th_x = int(SX * .2)
 brake_pos = [br_th_x, br_th_y]
 throttle_pos = [SX - br_th_x, br_th_y]
-
 
 driving_song_player:vlc.MediaPlayer = None
 get_ready_sound_player:vlc.MediaPlayer=None
@@ -242,31 +215,6 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
     except Exception as e:
         log.error(f'cannot open steering wheel: {e}')
 
-    trigger_device = None
-    if USE_XID:
-        log.info('configured to use Cedrus XID trigger box')
-        try:
-            # get a list of all attached XID devices
-            devices = pyxid2.get_xid_devices()
-
-            if devices:
-                print(devices)
-            else:
-                log.error("No Cedrus XID trigger devices detected")
-
-            trigger_device = devices[0]  # get the first device to use
-            log.info("Using ", trigger_device)
-        except Exception as e:
-            log.error(f'cannot open EEG trigger device: {e}')
-
-    cgx_serial = None
-    if USE_CGX:
-        log.info(f'using CGX dry electrode USB serial port on CGX_COM_PORT {CGX_COM_PORT}')
-        try:
-            cgx_serial = serial.Serial(CGX_COM_PORT, 1152003, timeout=5)
-        except serial.serialutil.SerialException as e:
-            log.error(f'will not be able to send steering errors on COM port: {e}')
-
     # trail CSV file
     trail_csvfile=None
     trail_reader=None
@@ -286,8 +234,7 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
     # data file
     data_file_name=os.path.join(output_path, driver_name + '_' + trial_name +'.csv')  # datetime.now().strftime('%Y-%m %d-%H-%M')
     data_file=open(data_file_name,'w')
-    data_file.write('# Mountain biking error Telluride 2023\n')
-    data_file.write('time(s),error,trail_pos\n')
+    data_file.write('time(s),error,trail_pos, steering\n')
     log.info(f'opened {data_file_name} for data')
 
     # game loop
@@ -349,7 +296,6 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
             mx,my=pygame.mouse.get_pos()
             steering11=(2.*(mx-sx2))/SX
             
-
         # msgX = bytes([126 + int(steerPos* 126)])
         # msgY = bytes([126 + int(throtPos* 126)])
         # msgZ = bytes([126 + int(breakPos* 126)])
@@ -468,30 +414,19 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
                 if start_time is None:
                     start_time=time() # only set start_time once
                 pygame.draw.rect(screen, WHITE, (SX - SYNC_BOX_SIZE, 0, SYNC_BOX_SIZE, SYNC_BOX_SIZE))  # rect is left top width height
-                if not TRIGGER_SOUND_FILE is None:
-                    playsound(TRIGGER_SOUND_FILE)
             else:
                 pygame.draw.rect(screen, BLACK, (SX - SYNC_BOX_SIZE, 0, SYNC_BOX_SIZE, SYNC_BOX_SIZE))  # rect is left top width height
 
             elapsed_time= time() - start_time
-            data_file.write(f'{elapsed_time:.6f},{err:.4f},{current_trail_pos:.4f}\n')
+            data_file.write(f'{elapsed_time:.6f},{err:.4f},{current_trail_pos:.4f}, {steering11:.4f}\n')
             pygame.draw.line(screen, RED, [sx2 + current_trail_pos * sx2, st_y], [sx2 + steering11 * sx2, st_y],
                              width=st_line_width)
-            if USE_XID and trigger_device is not None:
-                pass  # todo write the error to EEG trigger device
-                # trigger_device.enable_usb_output()
-            if USE_CGX and cgx_serial is not None:
-                quantized_err = int(err * 127)
-                byte_err = quantized_err.to_bytes(length=1, byteorder='big', signed=True)
-                # byte_err=np.int8(frame_counter)
-                cgx_serial.write(byte_err)
 
             # accumulate total error
             accumulated_err+=np.abs(err)
             avg_err=accumulated_err/frame_counter
             running_score=1/avg_err
             driving_started=True
-
 
             # maybe terminate
             if elapsed_time>DRIVE_TIME_LIMIT_S or keys[pygame.K_ESCAPE] or keys[pygame.K_x]:
@@ -539,7 +474,6 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
                         playing_game=True
                 else:
                     playing_game=False
-
 
         # draw brake and throttle discs
         if reversed:
