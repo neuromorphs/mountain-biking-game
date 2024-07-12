@@ -12,7 +12,7 @@ import pygame
 import numpy as np
 from time import time
 import csv
-# import debugpy # uncommment to attach to this process if running as subprocess from experiment_mtb.py
+import debugpy # uncommment to attach to this process if running as subprocess from experiment_mtb.py
 
 #################
 ## PARAMS

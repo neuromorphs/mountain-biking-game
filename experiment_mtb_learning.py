@@ -174,8 +174,8 @@ for i in range(nr_trials):
 
 		# PLAY GAME
 		# Draw fixaxtion cross
-		fixation.autoDraw = True
-		win.flip()
+		# fixation.autoDraw = True
+		# win.flip()
 
 		# Run the command and capture the output
 		trial_name = "--trial_name=trial_" + str(i+1)
@@ -191,11 +191,11 @@ for i in range(nr_trials):
 			log.info(output.stdout)
 		else:
 			log.error("Script execution failed.")
-			sys.exit("terminated early with escape")
+			# sys.exit("terminated early with escape")
 
-		# Remove fixaxtion cross
-		fixation.autoDraw = False
-		win.flip()
+		# # Remove fixaxtion cross
+		# fixation.autoDraw = False
+		# win.flip()
 
 		if cond == 'play':
 			# Slide with leaderboard
