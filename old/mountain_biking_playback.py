@@ -64,6 +64,8 @@ st_line_width = 3       # width of steering stuff
 
 playing_game = True 
 while playing_game: # run games until we quit or if game_mode==False then we quit after one run
+    
+    # initialize pygame
     pygame.init()
     window_size = [SX, SY]  # width and height
     screen = pygame.display.set_mode(window_size)
@@ -76,27 +78,24 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
     trail_reader = None
     trail_pos_current = 0.
     trail_angle_current = 0
-    if not TRAIL_CSV_FILE_NAME is None:
-        csv.register_dialect('skip-comments', skipinitialspace=True)
-        trail_csvfile = open(TRAIL_CSV_FILE_NAME, 'r')
-        trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile), dialect='skip-comments')
 
-        steering_csv_file = open(STEERING_CSV_FILE_NAME, 'r')
-        steering_reader = csv.DictReader(filter(lambda row: row[0] != '#', steering_csv_file), dialect='skip-comments')
+    # read trail and steering data
+    csv.register_dialect('skip-comments', skipinitialspace=True)
+    trail_csvfile = open(TRAIL_CSV_FILE_NAME, 'r')
+    trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile), dialect='skip-comments')
+    steering_csv_file = open(STEERING_CSV_FILE_NAME, 'r')
+    steering_reader = csv.DictReader(filter(lambda row: row[0] != '#', steering_csv_file), dialect='skip-comments')
 
     # data file
     data_file_name = os.path.join(output_path, driver_name + '_' + trial_name +'_playback.csv') 
     data_file = open(data_file_name,'w')
-    data_file.write('time(s),error,trail_pos, steering\n')
+    data_file.write('time,error,trail_pos, steering\n')
 
     # game loop
     steering11 = 0  # steering angle -1 to 1
-    steering11_inertia = 0
     start_time = None
-    running_score = 0
 
     frame_counter = 0
-    accumulated_err=0
     trigger_frame_counter = 0
     elapsed_time=0
     driving_started=False # set True when path crosses current time line
@@ -122,31 +121,12 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
         time_last=time_now
 
         # read or generate trail info
-        if not TRAIL_CSV_FILE_NAME is None:
-            try:
-                current_row = next(trail_reader)
-                current_row_steering = next(steering_reader)
-            except StopIteration:
-                showed_trigger_flash = False
-                trail[:] = np.nan
-                frame_counter=0
+        current_row = next(trail_reader)
+        current_row_steering = next(steering_reader)
 
-                trail_csvfile.close()
-                trail_csvfile = open(TRAIL_CSV_FILE_NAME, 'r')
-                trail_reader = csv.DictReader(filter(lambda row: row[0] != '#', trail_csvfile), dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
-                current_row = next(trail_reader)
-
-                steering_csvfile.close()
-                steering_csvfile = open(STEERING_CSV_FILE_NAME, 'r')
-                steering_reader = csv.DictReader(filter(lambda row: row[0] != '#', steering_csvfile), dialect='skip-comments')  # https://stackoverflow.com/questions/14158868/python-skip-comment-lines-marked-with-in-csv-dictreader
-                current_row = next(steering_reader)
-
-                time_start=time.time()
-                done = True
-
-            trail_time = float(current_row['time'])
-            trail_pos_current = float(current_row['trail_pos']) / 10  # range in file is -10 to +10, map to -1 to +1
-            steering11 = float(current_row_steering['steering'])
+        trail_time = float(current_row['time'])
+        trail_pos_current = float(current_row['trail_pos']) / 10  # range in file is -10 to +10, map to -1 to +1
+        steering11 = float(current_row_steering['steering'])
 
         trail[1:] = trail[0:-1]  # shift all the star rows down one
         trail[0] = trail_pos_current  # show trail from top of image
@@ -195,9 +175,6 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
             pygame.draw.line(screen, RED, [sx2 + current_trail_pos * sx2, st_y], [sx2 + steering11 * sx2, st_y], width=st_line_width)
 
             # accumulate total error
-            accumulated_err+=np.abs(err)
-            avg_err=accumulated_err/frame_counter
-            running_score=1/avg_err
             driving_started=True
 
             # maybe terminate
@@ -207,7 +184,7 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
 
         # draw text
         time_left=DRIVE_TIME_LIMIT_S-elapsed_time
-        img = font.render(f'Time left: {time_left:.1f}s score={running_score:.0f}', True, WHITE)
+        img = font.render(f'Time left: {time_left:.1f}s', True, WHITE)
         screen.blit(img, (20, 20))
 
         # update screen

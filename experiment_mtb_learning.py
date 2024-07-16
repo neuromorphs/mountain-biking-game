@@ -1,19 +1,15 @@
 ####################
+####################
 #### __ IMPORTS ____
 ####################
 # General libraries
 import os
-import sys	
-import numpy as np
-import pandas as pd
 from datetime import datetime
+import pandas as pd
+import numpy as np
 import subprocess
 from psychopy import visual, event, core
 from psychopy.hardware import keyboard
-
-from get_logger import get_logger
-log = get_logger() # tobi's logger for printing more informative logging messsages
-
 defaultKeyboard = keyboard.Keyboard(backend='iohub') 
 
 # Special functions
@@ -35,7 +31,7 @@ def countdown_timer(duration, window):
 ##############################
 # PARTICIPANT INFO
 participant = 'Test'  # name of subject
-output_path = os.path.join('./results', participant + '_' + datetime.now().strftime("%d_%m_%Y_%H_%M"))
+output_path = os.path.join('./results', participant)
 os.makedirs(output_path, exist_ok=True)
 
 # PARAMETERS DEBUGGING
@@ -45,20 +41,23 @@ ACCUMULATED_RESULTS_FILENAME = 'accumulated_results.csv'
 # PARAMETERS EXP
 # presentation
 driving_time_limit = 120
-nr_trials = 10
+nr_trials = 2
 do_rest = False
 time_slide_intro_trial = 1
-time_slide_outro_trial = 3
+time_slide_outro_trial = 1
 countdown_duration = 3
-difficulty_pre_and_post = 5
-difficulties_learning = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 conditions = ['play', 'motor', 'playback']
-base_command = ['python3', 'mountain_biking_experiment.py', f'--driver_name={participant}', f'--output_path={output_path}']
+base_command = ['python', 'mountain_biking_all_conds.py']
 # visual
-ratio_text_size = 60
+ratio_text_size = 40
 ratio_text_width=2
 ratio_cross = 40
 contrast = 0.1
+
+# # Command to activate Conda environment on Windows
+# activate_cmd = f'conda activate mtb'
+# subprocess.run(activate_cmd, shell=True)
+# print('Conda environment activated!')
 
 ############################
 #### __ PSYCHOPY CONFIG ____
@@ -97,7 +96,7 @@ text.autoDraw = True
 win.flip()
 event.waitKeys()
 if defaultKeyboard.getKeys(keyList=["escape"]):
-	sys.exit("terminated early with ESC")
+	core.quit()
 text.autoDraw = False
 
 # Slide 2
@@ -112,7 +111,7 @@ text.autoDraw = True
 win.flip()
 event.waitKeys()
 if defaultKeyboard.getKeys(keyList=["escape"]):
-	sys.exit("terminated early with ESC")
+	core.quit()
 text.autoDraw = False
 
 # Slide 3
@@ -127,7 +126,7 @@ text.autoDraw = True
 win.flip()
 event.waitKeys()
 if defaultKeyboard.getKeys(keyList=["escape"]):
-	sys.exit("terminated early with ESC")
+	core.quit()
 text.autoDraw = False
 
 # Slide 4
@@ -142,23 +141,15 @@ text.autoDraw = True
 win.flip()
 event.waitKeys()
 if defaultKeyboard.getKeys(keyList=["escape"]):
-	sys.exit("terminated early with ESC")
+	core.quit()
 text.autoDraw = False
 
 # Stimuli presentation begins
 for i in range(nr_trials):
-	
-    # Set the difficulty level for the pre-learning trials
-	if i == 0 or i == nr_trials-1:
-		difficulty = difficulty_pre_and_post
-	else:
-		difficulty = difficulties_learning[i]
-
 	for cond in conditions:
 
 		# Slide intro of each trial
-		text = visual.TextStim(win=win, text="Game " + str(i+1) + "/" + str(nr_trials) 
-						 							 + " difficulty: " + str(difficulty) 
+		text = visual.TextStim(win=win, text="Game " + str(i+1) + "/" + str(nr_trials) + '\n' 
 						 							 + " condition: " + cond,  
 								color="white",
 								contrast=contrast,
@@ -167,38 +158,42 @@ for i in range(nr_trials):
 		text.autoDraw = True
 		win.flip()
 		core.wait(time_slide_intro_trial)
+		if defaultKeyboard.getKeys(keyList=["escape"]):
+			core.quit()
 		text.autoDraw = False
 
 		# COUNTDOWN
 		countdown_timer(countdown_duration, win)	
 
 		# PLAY GAME
-		# Draw fixaxtion cross
-		# fixation.autoDraw = True
-		# win.flip()
+		fixation.autoDraw = True
+		win.flip()
+		win.winHandle.set_visible(False)  # Hide the PsychoPy window
 
 		# Run the command and capture the output
-		trial_name = "--trial_name=trial_" + str(i+1)
-		difficulty = "--difficulty=" + str(difficulty)
-		condition = "--condition=" + cond
-		command = base_command + [trial_name] + [difficulty] + [condition]
-		log.info(f'running subprocess "{command}"')
+		trial_str = "trial_" + str(i)
+		command = base_command + [f'--driver_name={participant}',
+								  f'--trial={trial_str}',
+								  f'--condition={cond}']
+		print(f"Command to execute: {' '.join(command)}")
 		output = subprocess.run(command, capture_output=True, text=True)
+		if defaultKeyboard.getKeys(keyList=["escape"]):
+			core.quit()
+		win.winHandle.set_visible(True)  # Show the PsychoPy window
 
 		# Check the return code to see if the script ran successfully
 		if output.returncode == 0:
-			log.info("Script executed successfully.")
-			log.info(output.stdout)
+			print("Script executed successfully.")
+			print(output.stdout)
 		else:
-			log.error("Script execution failed.")
-			# sys.exit("terminated early with escape")
+			print("Script execution failed.")
 
-		# # Remove fixaxtion cross
-		# fixation.autoDraw = False
-		# win.flip()
+		# Remove fixaxtion cross
+		fixation.autoDraw = False
+		win.flip()
 
-		if cond == 'play':
-			# Slide with leaderboard
+		# Slide with leaderboard
+		if cond == "play":
 			d = pd.read_csv(ACCUMULATED_RESULTS_FILENAME, comment='#')
 			drivers = d['driver']
 			errors = d['error']
@@ -239,7 +234,7 @@ for i in range(nr_trials):
 			win.flip()
 			event.waitKeys()
 			if defaultKeyboard.getKeys(keyList=["escape"]):
-				sys.exit("terminated early with ESC")
+				core.quit()
 			text.autoDraw = False	
 
 			# Call the countdown_timer function
