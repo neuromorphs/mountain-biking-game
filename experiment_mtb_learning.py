@@ -30,18 +30,18 @@ def countdown_timer(duration, window):
 #### __ EXPERIMENT CONFIG ____
 ##############################
 # PARTICIPANT INFO
-participant = 'Test'  # name of subject
+participant = 'Giorgia'  # name of subject
 output_path = os.path.join('./results', participant)
 os.makedirs(output_path, exist_ok=True)
 
 # PARAMETERS DEBUGGING
-full_screen = False # set to True for real experiment 
+full_screen = True # set to True for real experiment 
 ACCUMULATED_RESULTS_FILENAME = 'accumulated_results.csv'
 
 # PARAMETERS EXP
 # presentation
-driving_time_limit = 120
-nr_trials = 2
+driving_time_limit = 60
+nr_trials = 10
 do_rest = False
 time_slide_intro_trial = 1
 time_slide_outro_trial = 1
@@ -162,8 +162,8 @@ for i in range(nr_trials):
 			core.quit()
 		text.autoDraw = False
 
-		# COUNTDOWN
-		countdown_timer(countdown_duration, win)	
+		# # COUNTDOWN
+		# countdown_timer(countdown_duration, win)	
 
 		# PLAY GAME
 		fixation.autoDraw = True
@@ -216,7 +216,7 @@ for i in range(nr_trials):
 			win.flip()
 			event.waitKeys()
 			if defaultKeyboard.getKeys(keyList=["escape"]):
-				sys.exit("terminated early with ESC")
+				core.quit()
 			core.wait(time_slide_outro_trial)
 			text.autoDraw = False	
 

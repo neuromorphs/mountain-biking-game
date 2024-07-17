@@ -19,7 +19,7 @@ print('subprocess started!')
 #################
 ## PARAMS
 #################
-DRIVE_TIME_LIMIT_S = 120 # experiment terminates after this time in seconds
+DRIVE_TIME_LIMIT_S = 60 # experiment terminates after this time in seconds
 SPEED = 2  # how many rows to shift image per pygame tick
 FPS = 60 # changed to 60 for algorithmic trails
 SX = 800  # window width, 'size x'
@@ -45,7 +45,7 @@ if len(sys.argv)>1:
     STEERING_CSV_FILE_NAME = os.path.join(output_path, driver_name + '_' + args.trial + '_play.csv')
 else:
     debugging = True
-    cond = 'playback'
+    cond = 'play'
     driver_name = 'last_test'
     output_path = os.path.join('./results', driver_name)
     trial_name = 'trial_0'

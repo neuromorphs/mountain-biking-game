@@ -35,4 +35,8 @@ The script *experiment_mtb.py* runs the game repeatedly as subprocess and shows 
 
 ```
 python experiment_mtb.py
+
+
+$ lsl_relay into eeg_awasome
+channel 0
 ```
