@@ -45,7 +45,7 @@ else:
     trial_name = '0'
     diff = str(1)
     TRAIL_CSV_FILE_NAME ='trails/Action Delay.csv'
-    STEERING_CSV_FILE_NAME = 'results/mb_Aaron_trial_8_pred_norm_padafter.csv' # 'results/Giorgia_0.csv'
+    STEERING_CSV_FILE_NAME = 'results/mb_Aaron_trial_8_pred_norm_padafter_mean.csv' # 'results/Giorgia_0.csv'
     os.makedirs(os.path.join(output_path, driver_name), exist_ok=True)
 
 #################
