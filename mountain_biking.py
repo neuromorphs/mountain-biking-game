@@ -129,7 +129,7 @@ def get_params_from_difficulty_level(diff:int)->(float,float,int):
     turn_interval_s=5./diff # diff=1 makes 5 seconds avg per turn, diff=4 makes 1 per second
     max_angle_deg= 70*(diff/5.)
     speed=int((diff+1)/2)
-    track_width=0.6*/diff
+    track_width=0.6*diff
     log.info(f'difficulty={diff} results in turn_interval={turn_interval_s}s, max_angle={max_angle_deg}deg, speed={speed} lines/frame')
     
     return turn_interval_s,max_angle_deg,speed, track_width
