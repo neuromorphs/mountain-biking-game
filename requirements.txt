@@ -9,5 +9,5 @@ easygui
 pypref # storing last user, etc
 pandas
 python-vlc # demo mode music
-psychopy # for experiments
+# psychopy # for experiments
 debugpy # to debug subprocess lanch of game
