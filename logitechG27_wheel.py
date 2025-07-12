@@ -24,11 +24,17 @@ class Controller:
         self._joystick = pygame.joystick.Joystick(id)
         self._joystick.init()
         self.dead_zone = dead_zone
-
-        self._steer_idx     = 0
-        self._throttle_idx = 1
-        self._brake_idx = 2
-        self._reverse_idx   = 5
+        # print the name of the controller and type of joystick to the console
+        print(f'Controller name: {self._joystick.get_name()}')
+        print(f'Controller type: {self._joystick.get_id()}')
+        # assume joystick is an xbox controller and set the steer, 
+        # throttle, brake, and reverse indices so that the steering is the first axis, 
+        # throttle is the second axis, brake is the third axis, 
+        # and reverse is the fifth button
+        self._steer_idx     = 2 # left-right    
+        self._throttle_idx = 1 # forward-backward
+        self._brake_idx = 2 # brake
+        self._reverse_idx   = 5 # reverse
 
 
     def get_id(self):
