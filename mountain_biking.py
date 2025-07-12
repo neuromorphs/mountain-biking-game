@@ -89,7 +89,8 @@ SY = int(3 * SX / 4)  # window height (size y)
 LIGHT_SPEED = 3  # how fast stars wiggle their brightness
 
 STEERING_RATE = .01  # keyboard steering rate
-USE_MOUSE=True # true to control position directly by mouse x position in window
+USE_MOUSE=False # true to control position directly by mouse x position in window
+# False to use joystick
 
 # sound
 DRIVING_SONG= 'media/Sookie_ Sookie.mp3'
@@ -286,7 +287,7 @@ while playing_game: # run games until we quit or if game_mode==False then we qui
             # jsButtons = controller.get_buttons()
             jsInputs = controller.get_axis()
             #
-            steering11 = controller.get_steer()
+            steering11 = controller.get_steer() # has -1 to 1 range
             reversed = controller.get_reverse()
             # print(f'reversed={reversed}')
             throttle01 = controller.get_throttle()
