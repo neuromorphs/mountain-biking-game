@@ -150,3 +150,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 abstract.md
+media/Sookie_Sookie_3.pkf
+.gitignore
+media/Sookie_Sookie_3.wav
