@@ -5,57 +5,44 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Attach",
+            "name": "Python: Attach",
             "type": "debugpy",
             "request": "attach",
             "connect": {
               "host": "localhost", // replace this with remote machine name
               "port": 5678
             }
-          },
-        
+        },
         {
-            "name": "experiment",
+            "name": "Mountain Biking: Demo Mode",
             "type": "debugpy",
             "request": "launch",
-            "program": "experiment_mtb.py",
+            "program": "mountain_biking.py",
             "args": [],
             "console": "integratedTerminal"
-        },,
-        
+        },
         {
-            "name": "experiment-game",
+            "name": "Mountain Biking: Single Experiment (difficulty 1)",
             "type": "debugpy",
             "request": "launch",
             "program": "mountain_biking.py",
             "args": ["--driver_name=testuser", "--output_path=results", "--trial_name=0", "--difficulty=1"],
             "console": "integratedTerminal"
         },
-        
         {
-            "name": "demo defeault",
+            "name": "Mountain Biking: Single Experiment (difficulty 5)",
             "type": "debugpy",
             "request": "launch",
             "program": "mountain_biking.py",
+            "args": ["--driver_name=testuser", "--output_path=results", "--trial_name=0", "--difficulty=5"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Mountain Biking: Experiment Runner",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "experiment_mtb.py",
             "args": [],
-            "console": "integratedTerminal"
-        },
-        
-        {
-            "name": "demo middle hard",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "mountain_biking.py",
-            "args": ["--difficulty=3"],
-            "console": "integratedTerminal"
-        },
-        
-        {
-            "name": "demo hardest",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "mountain_biking.py",
-            "args": ["--difficulty=5"],
             "console": "integratedTerminal"
         }
     ]
